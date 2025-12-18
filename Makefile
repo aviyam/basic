@@ -28,12 +28,13 @@ SRCS = ./src/main.c ./src/token.c ./src/eval.c ./src/exec.c ./src/var.c
 # SRCS = main.c token.c eval.c exec.c var.c
 OBJS = $(SRCS:.c=.o)
 
-.PHONY: all clean
+.PHONY: clean all
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) -lm
+	rm -f $(OBJS)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
