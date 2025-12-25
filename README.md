@@ -14,6 +14,7 @@ make
 ## Usage
 You can either run it on its own (to enter interactive mode), or pass a file to it to start running.
 
+The interpreter supports shebangs (`#!/path/to/basic`) by ignoring the first line if it starts with `#`.
 
 ## Features
 

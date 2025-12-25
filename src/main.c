@@ -119,17 +119,27 @@ void load_program(const char *filename) {
     FILE *fp;
     char buffer[MAX_LINE_LEN];
     char path[MAX_LINE_LEN];
-    
-    strcpy(path, filename);
-    ensure_extension(path);
-    
-    fp = fopen(path, "r");
+    int first_line = 1;
+
+    /* Try to open the file as is */
+    fp = fopen(filename, "r");
     if (!fp) {
-        fprintf(stderr, "Could not open file %s\n", path);
+        /* Try with .bas extension */
+        strcpy(path, filename);
+        ensure_extension(path);
+        fp = fopen(path, "r");
+    }
+    
+    if (!fp) {
+        fprintf(stderr, "Could not open file %s\n", filename);
         exit(1);
     }
 
     while (fgets(buffer, MAX_LINE_LEN, fp)) {
+        if (first_line) {
+            first_line = 0;
+            if (buffer[0] == '#') continue; 
+        }
         process_line(buffer);
     }
     fclose(fp);

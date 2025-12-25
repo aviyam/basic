@@ -762,6 +762,7 @@ void exec_statement(void) {
     else if (current_token == TOK_GOSUB) cmd_gosub();
     else if (current_token == TOK_RETURN) cmd_return();
     else if (current_token == TOK_END) cmd_end();
+    else if (current_token == TOK_STOP) { next_token(); cmd_end(); }
     else if (current_token == TOK_RUN) cmd_run();
     else if (current_token == TOK_LIST) cmd_list();
     else if (current_token == TOK_NEW) cmd_new();
