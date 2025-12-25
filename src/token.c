@@ -43,6 +43,9 @@ static Keyword keywords[] = {
     {"TAB", TOK_TAB},
     {"SPC", TOK_SPC},
     {"INKEY$", TOK_INKEY},
+    {"SAVE", TOK_SAVE},
+    {"LOAD", TOK_LOAD},
+    {"EDIT", TOK_EDIT},
     {NULL, TOK_NONE}
 };
 

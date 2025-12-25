@@ -6,7 +6,7 @@ UNAME_M := $(shell uname -m)
 
 # Default Compiler and Flags
 CC = cc
-CFLAGS = -O
+CFLAGS = -Os
 LDFLAGS = 
 
 # Check for Windows (MinGW/Cygwin)
@@ -34,6 +34,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) -lm
+	strip $(TARGET)
 	rm -f $(OBJS)
 
 .c.o:

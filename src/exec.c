@@ -94,9 +94,8 @@ void cmd_list(void) {
     }
 }
 
-void cmd_new(void) {
+void clear_program_data(void) {
     int i;
-    next_token();
     for (i = 0; i < program_line_count; i++) {
         free(program[i].text);
     }
@@ -108,6 +107,81 @@ void cmd_new(void) {
         }
     }
     var_count = 0;
+}
+
+void cmd_new(void) {
+    next_token();
+    clear_program_data();
+}
+
+void cmd_save(void) {
+    char *filename;
+    FILE *fp;
+    int i;
+    
+    next_token();
+    if (current_token != TOK_STRING) error("Expected filename string");
+    filename = token_string;
+    
+    fp = fopen(filename, "w");
+    if (!fp) error("Could not open file for writing");
+    
+    for (i = 0; i < program_line_count; i++) {
+        fprintf(fp, "%d %s\n", program[i].number, program[i].text);
+    }
+    
+    fclose(fp);
+    next_token();
+}
+
+void cmd_load(void) {
+    char filename[MAX_LINE_LEN];
+    
+    next_token();
+    if (current_token != TOK_STRING) error("Expected filename string");
+    strcpy(filename, token_string);
+    
+    clear_program_data();
+    load_program(filename);
+    
+    next_token();
+}
+
+void cmd_edit(void) {
+    char filename[] = ".temp.bas";
+    char command[512];
+    FILE *fp;
+    int i;
+    
+    next_token(); /* Consume EDIT */
+    
+    /* Save current program to temp file */
+    fp = fopen(filename, "w");
+    if (fp) {
+        for (i = 0; i < program_line_count; i++) {
+            fprintf(fp, "%d %s\n", program[i].number, program[i].text);
+        }
+        fclose(fp);
+    }
+    
+    /* Launch editor */
+    #ifdef _WIN32
+    sprintf(command, "notepad %s", filename);
+    #else
+    {
+        const char *editor = getenv("EDITOR");
+        if (!editor) editor = "nano";
+        sprintf(command, "%s %s", editor, filename);
+    }
+    #endif
+    
+    restore_terminal();
+    system(command);
+    
+    /* Reload */
+    clear_program_data();
+    load_program(filename);
+    remove(filename);
 }
 
 void cmd_bye(void) {
@@ -452,6 +526,14 @@ void exec_statement(void) {
     else if (current_token == TOK_GOSUB) cmd_gosub();
     else if (current_token == TOK_RETURN) cmd_return();
     else if (current_token == TOK_END) cmd_end();
+    else if (current_token == TOK_RUN) cmd_run();
+    else if (current_token == TOK_LIST) cmd_list();
+    else if (current_token == TOK_NEW) cmd_new();
+    else if (current_token == TOK_SAVE) cmd_save();
+    else if (current_token == TOK_LOAD) cmd_load();
+    else if (current_token == TOK_EDIT) cmd_edit();
+    else if (current_token == TOK_BYE) cmd_bye();
+    else if (current_token == TOK_CLS) cmd_cls();
     else if (current_token == TOK_REM) cmd_rem();
     else if (current_token == TOK_IDENTIFIER) {
         char var_name[MAX_VAR_NAME];
