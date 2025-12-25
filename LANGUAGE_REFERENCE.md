@@ -4,16 +4,16 @@ This guide provides an overview of the commands and functions supported by the B
 
 ## System Commands
 
-| Command | Description | Example |
-| partly | ----------- | ------- |
-| `RUN` | Executes the program currently in memory. | `RUN` |
-| `LIST` | Lists the program lines currently in memory. | `LIST` |
-| `NEW` | Clears the current program and variables from memory. | `NEW` |
-| `BYE`, `EXIT`, `QUIT` | Exits the BASIC interpreter. | `BYE` |
-| `SAVE "filename"` | Saves the current program to disk. | `SAVE "myprog.bas"` |
-| `LOAD "filename"` | Loads a program from disk. | `LOAD "myprog.bas"` |
-| `EDIT` | Opens the current program in the system's external editor (e.g., nano, notepad). | `EDIT` |
-| `CLS` | Clears the terminal screen. | `CLS` |
+| Command | Description |
+| ------- | ----------- |
+| `RUN` | Executes the program currently in memory. |
+| `LIST` | Lists the program lines currently in memory. |
+| `NEW` | Clears the current program and variables from memory. |
+| `BYE`, `EXIT`, `QUIT` | Exits the BASIC interpreter. |
+| `SAVE "filename"` | Saves the current program to disk. |
+| `LOAD "filename"` | Loads a program from disk. |
+| `EDIT` | Opens the current program in the system's external editor (e.g., nano, notepad). |
+| `CLS` | Clears the terminal screen. |
 
 ## Input / Output
 
