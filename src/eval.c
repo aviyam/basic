@@ -1,11 +1,73 @@
 #include "bas.h"
 
 /* Forward declarations */
+Value expression(void);
+Value logical_or(void);
+Value logical_and(void);
+Value logical_not(void);
+Value relation(void);
 Value additive(void);
 Value term(void);
 Value factor(void);
 
 Value expression(void) {
+    return logical_or();
+}
+
+Value logical_or(void) {
+    Value left = logical_and();
+    while (current_token == TOK_OR) {
+        next_token();
+        Value right = logical_and();
+        if (left.type == VAL_NUM && right.type == VAL_NUM) {
+            /* BASIC uses truthy/falsy logic. 0 is false, !=0 is true (usually -1 for built-ins).
+               A OR B is true if A!=0 or B!=0. Result -1.
+               Or bitwise? Standard BASIC behavior varies.
+               MS BASIC: bitwise integer operations.
+               For this simple interpreter, let's stick to logical boolean results (-1/0).
+               Or bitwise if integer? Let's assume boolean for flow control.
+            */
+             int l = (left.num != 0);
+             int r = (right.num != 0);
+             left.num = (l || r) ? -1.0 : 0.0;
+        } else {
+             error("Type mismatch in OR");
+        }
+    }
+    return left;
+}
+
+Value logical_and(void) {
+    Value left = logical_not();
+    while (current_token == TOK_AND) {
+        next_token();
+        Value right = logical_not();
+        if (left.type == VAL_NUM && right.type == VAL_NUM) {
+             int l = (left.num != 0);
+             int r = (right.num != 0);
+             left.num = (l && r) ? -1.0 : 0.0;
+        } else {
+             error("Type mismatch in AND");
+        }
+    }
+    return left;
+}
+
+Value logical_not(void) {
+    if (current_token == TOK_NOT) {
+        next_token();
+        Value val = logical_not(); /* Recursive for NOT NOT A */
+        if (val.type == VAL_NUM) {
+             val.num = (val.num == 0.0) ? -1.0 : 0.0;
+        } else {
+             error("Type mismatch in NOT");
+        }
+        return val;
+    }
+    return relation();
+}
+
+Value relation(void) {
     Value left = additive();
     while (current_token == TOK_EQ || current_token == TOK_NE ||
            current_token == TOK_LT || current_token == TOK_GT ||
@@ -172,16 +234,20 @@ Value factor(void) {
                  strcpy(token_string, save_str);
             } else {
                 /* Array access */
-                int index;
+                int indices[MAX_DIMS];
+                int dims = 0;
+                
                 next_token();
-                {
+                do {
+                    if (dims >= MAX_DIMS) error("Too many subscripts");
                     Value v = expression();
                     if (v.type != VAL_NUM) error("Array index must be number");
-                    index = (int)v.num;
-                }
+                    indices[dims++] = (int)v.num;
+                } while (match(TOK_COMMA));
+
                 if (!match(TOK_RPAREN)) error("Expected ')'");
                 
-                Value *ptr = get_array_ptr(var_name, index);
+                Value *ptr = get_array_ptr(var_name, dims, indices);
                 if (ptr) {
                      val = *ptr;
                      if (val.type == VAL_STR && val.str) {
@@ -355,7 +421,7 @@ Value factor(void) {
             case TOK_INT: val.num = floor(val.num); break;
             case TOK_ABS: val.num = fabs(val.num); break;
             case TOK_SGN: val.num = (val.num > 0) ? 1 : ((val.num < 0) ? -1 : 0); break;
-            case TOK_RND: val.num = ((double)rand() / (double)RAND_MAX); break;
+            case TOK_RND: val.num = ((double)rand() / ((double)RAND_MAX + 1.0)); break;
             default: break;
         }
     } else {

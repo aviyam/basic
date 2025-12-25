@@ -59,6 +59,9 @@ static Keyword keywords[] = {
     {"RESTORE", TOK_RESTORE},
     {"STOP", TOK_STOP},
     {"DEF", TOK_DEF},
+    {"AND", TOK_AND},
+    {"OR", TOK_OR},
+    {"NOT", TOK_NOT},
     {NULL, TOK_NONE}
 };
 

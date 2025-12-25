@@ -35,6 +35,7 @@ typedef enum {
     TOK_ASC, TOK_CHR, TOK_MID, TOK_LEFT, TOK_RIGHT, TOK_VAL, TOK_STR,
     TOK_PLUS, TOK_MINUS, TOK_MUL, TOK_DIV, TOK_MOD,
     TOK_EQ, TOK_NE, TOK_LT, TOK_GT, TOK_LE, TOK_GE,
+    TOK_AND, TOK_OR, TOK_NOT,
     TOK_LPAREN, TOK_RPAREN, TOK_COMMA, TOK_SEMICOLON, TOK_COLON,
     TOK_SAVE, TOK_LOAD, TOK_EDIT,
     TOK_DATA, TOK_READ, TOK_RESTORE,
@@ -71,10 +72,13 @@ typedef struct {
 } UserFunc;
 
 /* Structure for Array */
+#define MAX_DIMS 3
 typedef struct {
     char name[MAX_VAR_NAME];
     ValType type;
-    int size;
+    int dims;                 /* Number of dimensions (1 or 2 usually) */
+    int dim_sizes[MAX_DIMS];  /* Size of each dimension */
+    int total_size;
     Value *data; /* Dynamically allocated array of values */
 } Array;
 
@@ -154,8 +158,8 @@ Value get_var(const char *name);
 void set_var(const char *name, Value val);
 
 /* Arrays */
-Value *get_array_ptr(const char *name, int index);
-void create_array(const char *name, int size);
+Value *get_array_ptr(const char *name, int dims, int *indices);
+void create_array(const char *name, int dims, int *sizes);
 
 /* Utils */
 void error(const char *msg);

@@ -85,7 +85,7 @@ void cmd_run(void) {
     /* Clear arrays */
     for (i = 0; i < array_count; i++) {
         int j;
-        for (j = 0; j < arrays[i].size; j++) {
+        for (j = 0; j < arrays[i].total_size; j++) {
              if (arrays[i].type == VAL_STR && arrays[i].data[j].str) {
                  free(arrays[i].data[j].str);
              }
@@ -124,7 +124,7 @@ void clear_program_data(void) {
     /* Clear arrays */
     for (i = 0; i < array_count; i++) {
         int j;
-        for (j = 0; j < arrays[i].size; j++) {
+        for (j = 0; j < arrays[i].total_size; j++) {
              if (arrays[i].type == VAL_STR && arrays[i].data[j].str) {
                  free(arrays[i].data[j].str);
              }
@@ -367,15 +367,18 @@ void cmd_let(void) {
     
     if (current_token == TOK_LPAREN) {
         /* Array assignment */
-        int index;
+        int indices[MAX_DIMS];
+        int dims = 0;
         Value val;
         
         next_token();
-        {
+        do {
+            if (dims >= MAX_DIMS) error("Too many subscripts");
             Value vidx = expression();
             if (vidx.type != VAL_NUM) error("Array index must be number");
-            index = (int)vidx.num;
-        }
+            indices[dims++] = (int)vidx.num;
+        } while (match(TOK_COMMA));
+        
         if (!match(TOK_RPAREN)) error("Expected ')'");
         
         if (!match(TOK_EQ)) error("Expected =");
@@ -383,7 +386,7 @@ void cmd_let(void) {
         val = expression();
         
         {
-            Value *ptr = get_array_ptr(var_name, index);
+            Value *ptr = get_array_ptr(var_name, dims, indices);
             if (ptr) {
                  if (strchr(var_name, '$')) {
                      if (val.type != VAL_STR) error("Type mismatch, expected string");
@@ -731,21 +734,25 @@ void cmd_dim(void) {
     
     do {
         char var_name[MAX_VAR_NAME];
-        int size;
+        int sizes[MAX_DIMS];
+        int dims = 0;
         
         if (current_token != TOK_IDENTIFIER) error("Expected array name");
         strcpy(var_name, token_string);
         next_token();
         
         if (!match(TOK_LPAREN)) error("Expected '('");
-        {
+        
+        do {
+            if (dims >= MAX_DIMS) error("Too many dimensions");
             Value v = expression();
             if (v.type != VAL_NUM) error("Array dimension must be number");
-            size = (int)v.num;
-        }
+            sizes[dims++] = (int)v.num + 1; /* 0-based indexing */
+        } while (match(TOK_COMMA));
+        
         if (!match(TOK_RPAREN)) error("Expected ')'");
         
-        create_array(var_name, size + 1);
+        create_array(var_name, dims, sizes);
         
     } while (match(TOK_COMMA));
 }
@@ -826,15 +833,18 @@ void exec_statement(void) {
         
         if (current_token == TOK_LPAREN) {
             /* Array assignment */
-            int index;
+            int indices[MAX_DIMS];
+            int dims = 0;
             Value val;
             
             next_token();
-            {
+            do {
+                if (dims >= MAX_DIMS) error("Too many subscripts");
                 Value vidx = expression();
                 if (vidx.type != VAL_NUM) error("Array index must be number");
-                index = (int)vidx.num;
-            }
+                indices[dims++] = (int)vidx.num;
+            } while (match(TOK_COMMA));
+            
             if (!match(TOK_RPAREN)) error("Expected ')'");
             
             if (!match(TOK_EQ)) error("Expected =");
@@ -842,7 +852,7 @@ void exec_statement(void) {
             val = expression();
             
             {
-                Value *ptr = get_array_ptr(var_name, index);
+                Value *ptr = get_array_ptr(var_name, dims, indices);
                 /* Type check */
                 if (ptr) {
                      if (strchr(var_name, '$')) {

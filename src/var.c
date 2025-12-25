@@ -74,7 +74,7 @@ void set_var(const char *name, Value val) {
     }
 }
 
-void create_array(const char *name, int size) {
+void create_array(const char *name, int dims, int *sizes) {
     int i;
     for (i = 0; i < array_count; i++) {
         if (strcmp(arrays[i].name, name) == 0) {
@@ -83,11 +83,20 @@ void create_array(const char *name, int size) {
     }
     
     if (array_count < MAX_ARRAYS) {
-        arrays[array_count].data = (Value *)calloc(size, sizeof(Value));
+        int total_size = 1;
+        int d;
+        
+        arrays[array_count].dims = dims;
+        for (d = 0; d < dims; d++) {
+            arrays[array_count].dim_sizes[d] = sizes[d];
+            total_size *= sizes[d];
+        }
+        arrays[array_count].total_size = total_size;
+        
+        arrays[array_count].data = (Value *)calloc(total_size, sizeof(Value));
         if (!arrays[array_count].data) error("Out of memory for array");
         
         strcpy(arrays[array_count].name, name);
-        arrays[array_count].size = size;
         
         if (strchr(name, '$')) {
              arrays[array_count].type = VAL_STR;
@@ -102,14 +111,48 @@ void create_array(const char *name, int size) {
     }
 }
 
-Value *get_array_ptr(const char *name, int index) {
+Value *get_array_ptr(const char *name, int dims, int *indices) {
     int i;
     for (i = 0; i < array_count; i++) {
         if (strcmp(arrays[i].name, name) == 0) {
-            if (index < 0 || index >= arrays[i].size) {
-                 error("Array index out of bounds");
+            if (arrays[i].dims != dims) {
+                error("Incorrect number of subscripts");
             }
-            return &arrays[i].data[index];
+            
+            int offset = 0;
+            int d;
+            for (d = 0; d < dims; d++) {
+                if (indices[d] < 0 || indices[d] >= arrays[i].dim_sizes[d]) {
+                    error("Array index out of bounds");
+                }
+                /* Stride calculation:
+                   For 2D: [x][y] -> x * size_y + y
+                   For 3D: [x][y][z] -> (x * size_y + y) * size_z + z
+                   General: offset = offset * next_dim_size + next_index
+                   Wait, "next_dim_size" isn't correct in loop order.
+                   Common C way: offset = offset * dim_size[d] + indices[d] ?
+                   No. 
+                   dim_sizes[0] = X_SIZE, dim_sizes[1] = Y_SIZE.
+                   A[i][j].
+                   Offset = i * Y_SIZE + j.
+                   
+                   Generalized:
+                   offset = 0
+                   for d = 0 to dims-1:
+                       offset = offset * (dim_sizes[d]???) + indices[d]
+                       
+                   No, stride for dimension d is product of sizes[d+1...end].
+                   
+                   Let's use the iterative approach:
+                   offset = indices[0]
+                   for d = 1 to dims-1:
+                       offset = offset * arrays[i].dim_sizes[d] + indices[d]
+                */
+                if (d == 0) offset = indices[d];
+                else offset = offset * arrays[i].dim_sizes[d] + indices[d];
+            }
+            
+            return &arrays[i].data[offset];
         }
     }
     error("Array not defined");
