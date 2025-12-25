@@ -748,8 +748,24 @@ void cmd_read(void) {
          /* Main lexer: get variable name */
          if (current_token != TOK_IDENTIFIER) error("Expected variable in READ");
          strcpy(var_name, token_string);
-         next_token(); 
+         next_token();
          
+         /* Check for array indices */
+         int indices[MAX_DIMS];
+         int dims = 0;
+         int is_array = 0;
+         if (current_token == TOK_LPAREN) {
+             is_array = 1;
+             next_token();
+             do {
+                 if (dims >= MAX_DIMS) error("Too many subscripts");
+                 Value vidx = expression();
+                 if (vidx.type != VAL_NUM) error("Array index must be number");
+                 indices[dims++] = (int)vidx.num;
+             } while (match(TOK_COMMA));
+             if (!match(TOK_RPAREN)) error("Expected ')'");
+         }
+
          /* Save Main Lexer State */
          main_token_ptr = token_ptr;
          main_token = current_token;
@@ -845,7 +861,38 @@ void cmd_read(void) {
          token_number = main_token_number;
          strcpy(token_string, main_token_string);
          
-         set_var(var_name, val);
+         if (is_array) {
+             Value *ptr = get_array_ptr(var_name, dims, indices);
+             if (ptr) {
+                 if (strchr(var_name, '$')) {
+                     if (val.type != VAL_STR) {
+                         /* Convert number to string if needed? Or error */
+                         if (val.type == VAL_NUM) {
+                              /* Allow number to string conversion for robustness? */
+                              val.type = VAL_STR;
+                              val.str = malloc(32);
+                              sprintf(val.str, "%g", val.num);
+                         }
+                     }
+                     if (ptr->str) free(ptr->str);
+                     ptr->type = VAL_STR;
+                     ptr->str = val.str;
+                 } else {
+                     if (val.type != VAL_NUM) {
+                         if (val.type == VAL_STR) {
+                             /* Try to convert string to number */
+                             val.type = VAL_NUM;
+                             val.num = atof(val.str);
+                             free(val.str);
+                         }
+                     }
+                     ptr->type = VAL_NUM;
+                     ptr->num = val.num;
+                 }
+             }
+         } else {
+             set_var(var_name, val);
+         }
          
     } while (match(TOK_COMMA));
 }

@@ -100,7 +100,12 @@ void create_array(const char *name, int dims, int *sizes) {
         
         if (strchr(name, '$')) {
              arrays[array_count].type = VAL_STR;
-             /* Initialized to 0/NULL by calloc */
+             int j;
+             for(j=0; j<total_size; j++) {
+                 arrays[array_count].data[j].type = VAL_STR;
+                 arrays[array_count].data[j].str = malloc(1);
+                 arrays[array_count].data[j].str[0] = '\0';
+             }
         } else {
              arrays[array_count].type = VAL_NUM;
         }

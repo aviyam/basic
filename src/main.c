@@ -1,4 +1,5 @@
 #include "bas.h"
+#include <time.h>
 
 /* Global definitions */
 Line program[MAX_LINES];
@@ -183,6 +184,8 @@ void interactive_mode(void) {
 }
 
 int main(int argc, char **argv) {
+    srand(time(NULL));
+
     if (argc < 2) {
         interactive_mode();
         return 0;
