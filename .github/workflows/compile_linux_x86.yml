@@ -12,14 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    
+    - uses: actions/checkout@v4
     - name: Create new directory
       run: |
         mkdir bin
         touch bin/basic
-         
-
-    - uses: actions/checkout@v4
+   
     - name: make
       run: make
  
