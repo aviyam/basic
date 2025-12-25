@@ -178,6 +178,11 @@ int main(int argc, char **argv) {
     }
 
     load_program(argv[1]);
+    run_program();
+
+    return 0;
+}
+
 void run_program(void) {
     current_line_idx = 0;
     
@@ -213,7 +218,4 @@ void run_program(void) {
         }
     }
     restore_terminal();
-}
-
-    return 0;
 }

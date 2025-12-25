@@ -512,6 +512,7 @@ void cmd_for(void) {
         for_stack[for_sp].target = end_val;
         for_stack[for_sp].step = step_val;
         for_stack[for_sp].line_idx = current_line_idx;
+        for_stack[for_sp].resume_ptr = token_ptr; /* Save resume internal pointer */
         for_sp++;
     } else {
         error("FOR stack overflow");
@@ -542,6 +543,7 @@ void cmd_next(void) {
         
         if (loop_continues) {
             current_line_idx = loop->line_idx; 
+            jump_to_ptr = loop->resume_ptr; /* Request resume within line */
         } else {
             for_sp--;
         }
@@ -829,7 +831,4 @@ void exec_statement(void) {
     }
 }
 
-void run_program(void) {
-    
-}
-```
+

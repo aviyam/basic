@@ -323,7 +323,6 @@ Value factor(void) {
             default: break;
         }
     } else {
-        printf("DEBUG Factor Error: token=%d str='%s' number=%g\n", current_token, token_string, token_number);
         error("Expected number, variable, or function");
     }
     return val;
