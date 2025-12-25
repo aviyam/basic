@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Build basic binary linux
 
 on:
   push:
