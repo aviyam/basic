@@ -16,6 +16,7 @@ jobs:
     - name: Create new directory
       run: |
         mkdir bin
+        touch bin/basic
          
 
     - uses: actions/checkout@v4
