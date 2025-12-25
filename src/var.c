@@ -73,3 +73,45 @@ void set_var(const char *name, Value val) {
         error("Too many variables");
     }
 }
+
+void create_array(const char *name, int size) {
+    int i;
+    for (i = 0; i < array_count; i++) {
+        if (strcmp(arrays[i].name, name) == 0) {
+            error("Array already defined");
+        }
+    }
+    
+    if (array_count < MAX_ARRAYS) {
+        arrays[array_count].data = (Value *)calloc(size, sizeof(Value));
+        if (!arrays[array_count].data) error("Out of memory for array");
+        
+        strcpy(arrays[array_count].name, name);
+        arrays[array_count].size = size;
+        
+        if (strchr(name, '$')) {
+             arrays[array_count].type = VAL_STR;
+             /* Initialized to 0/NULL by calloc */
+        } else {
+             arrays[array_count].type = VAL_NUM;
+        }
+        
+        array_count++;
+    } else {
+        error("Too many arrays");
+    }
+}
+
+Value *get_array_ptr(const char *name, int index) {
+    int i;
+    for (i = 0; i < array_count; i++) {
+        if (strcmp(arrays[i].name, name) == 0) {
+            if (index < 0 || index >= arrays[i].size) {
+                 error("Array index out of bounds");
+            }
+            return &arrays[i].data[index];
+        }
+    }
+    error("Array not defined");
+    return NULL; 
+}

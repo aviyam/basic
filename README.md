@@ -15,6 +15,7 @@ You can either run it on its own, or pass a file to it.
 ## Features
 
 - **Variables**: Numeric (`A=10`) and String (`A$="Hello"`)
+- **Arrays**: 1D Numeric and String arrays implicitly or via `DIM` (e.g. `DIM A(10)`)
 - **Control Flow**: `IF/THEN/GOTO`, `FOR/NEXT`, `GOSUB/RETURN`
 - **Math**: `SIN`, `COS`, `TAN`, `LOG`, `EXP`, `SQR`, `INT`, `ABS`, `RND`
 - **String**: `LEN`, `INKEY$`
@@ -23,6 +24,7 @@ You can either run it on its own, or pass a file to it.
 - **Management**: `LIST`, `RUN`, `NEW`, `SAVE`, `LOAD`, `EDIT`
 
 Note: File operations (`SAVE`, `LOAD`, `EDIT`, CLI argument) automatically append `.bas` if no extension is provided.
+Arrays must be declared with `DIM`. Indices are 0-based.
 
 ## Example
 

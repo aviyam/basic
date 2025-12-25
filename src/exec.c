@@ -82,6 +82,19 @@ void cmd_run(void) {
     }
     var_count = 0;
     
+    /* Clear arrays */
+    for (i = 0; i < array_count; i++) {
+        int j;
+        for (j = 0; j < arrays[i].size; j++) {
+             if (arrays[i].type == VAL_STR && arrays[i].data[j].str) {
+                 free(arrays[i].data[j].str);
+             }
+        }
+        free(arrays[i].data);
+    }
+    array_count = 0;
+
+    
     run_program();
     execution_finished = 0; /* Reset for interactive */
 }
@@ -107,6 +120,18 @@ void clear_program_data(void) {
         }
     }
     var_count = 0;
+    
+    /* Clear arrays */
+    for (i = 0; i < array_count; i++) {
+        int j;
+        for (j = 0; j < arrays[i].size; j++) {
+             if (arrays[i].type == VAL_STR && arrays[i].data[j].str) {
+                 free(arrays[i].data[j].str);
+             }
+        }
+        free(arrays[i].data);
+    }
+    array_count = 0;
 }
 
 void cmd_new(void) {
@@ -333,14 +358,51 @@ void cmd_if(void) {
 
 void cmd_let(void) {
     char var_name[MAX_VAR_NAME];
-    Value val;
+    
     next_token();
     if (current_token != TOK_IDENTIFIER) error("Expected variable");
     strcpy(var_name, token_string);
     next_token();
-    if (!match(TOK_EQ)) error("Expected =");
-    val = expression();
-    set_var(var_name, val);
+    
+    if (current_token == TOK_LPAREN) {
+        /* Array assignment */
+        int index;
+        Value val;
+        
+        next_token();
+        {
+            Value vidx = expression();
+            if (vidx.type != VAL_NUM) error("Array index must be number");
+            index = (int)vidx.num;
+        }
+        if (!match(TOK_RPAREN)) error("Expected ')'");
+        
+        if (!match(TOK_EQ)) error("Expected =");
+        
+        val = expression();
+        
+        {
+            Value *ptr = get_array_ptr(var_name, index);
+            if (ptr) {
+                 if (strchr(var_name, '$')) {
+                     if (val.type != VAL_STR) error("Type mismatch, expected string");
+                     if (ptr->str) free(ptr->str);
+                     ptr->type = VAL_STR;
+                     ptr->str = val.str;
+                 } else {
+                     if (val.type != VAL_NUM) error("Type mismatch, expected number");
+                     ptr->type = VAL_NUM;
+                     ptr->num = val.num;
+                 }
+            }
+        }
+    } else {
+        /* Normal assignment */
+        Value val;
+        if (!match(TOK_EQ)) error("Expected =");
+        val = expression();
+        set_var(var_name, val);
+    }
 }
 
 void cmd_input(void) {
@@ -661,6 +723,31 @@ void cmd_read(void) {
     } while (match(TOK_COMMA));
 }
 
+void cmd_dim(void) {
+    char var_name[MAX_VAR_NAME];
+    int size;
+    
+    next_token();
+    if (current_token != TOK_IDENTIFIER) error("Expected array name");
+    strcpy(var_name, token_string);
+    next_token();
+    
+    if (!match(TOK_LPAREN)) error("Expected '('");
+    {
+        Value v = expression();
+        if (v.type != VAL_NUM) error("Array dimension must be number");
+        size = (int)v.num;
+    }
+    if (!match(TOK_RPAREN)) error("Expected ')'");
+    
+    /* Standard BASIC defaults to base 0, so size 10 means indices 0..10 (size 11).
+       But let's stick to 0-indexed size for now. DIM A(10) -> size 11, indices 0..10 is common.
+       Or strict size 10 (0..9). 
+       Let's implement DIM A(N) -> Indices 0..N, so size is N+1. 
+    */
+    create_array(var_name, size + 1);
+}
+
 void exec_statement(void) {
     if (current_token == TOK_PRINT) cmd_print();
     else if (current_token == TOK_IF) cmd_if();
@@ -685,11 +772,48 @@ void exec_statement(void) {
     else if (current_token == TOK_DATA) cmd_data();
     else if (current_token == TOK_READ) cmd_read();
     else if (current_token == TOK_RESTORE) cmd_restore();
+    else if (current_token == TOK_DIM) cmd_dim();
     else if (current_token == TOK_IDENTIFIER) {
         char var_name[MAX_VAR_NAME];
         strcpy(var_name, token_string);
         next_token();
-        if (current_token == TOK_EQ) {
+        
+        if (current_token == TOK_LPAREN) {
+            /* Array assignment */
+            int index;
+            Value val;
+            
+            next_token();
+            {
+                Value vidx = expression();
+                if (vidx.type != VAL_NUM) error("Array index must be number");
+                index = (int)vidx.num;
+            }
+            if (!match(TOK_RPAREN)) error("Expected ')'");
+            
+            if (!match(TOK_EQ)) error("Expected =");
+            
+            val = expression();
+            
+            {
+                Value *ptr = get_array_ptr(var_name, index);
+                /* Type check */
+                if (ptr) {
+                     if (strchr(var_name, '$')) {
+                         if (val.type != VAL_STR) error("Type mismatch, expected string");
+                         if (ptr->str) free(ptr->str);
+                         ptr->type = VAL_STR;
+                         ptr->str = val.str; /* take ownership */
+                         /* But wait, expression return gives us a copy, so we take it. */
+                     } else {
+                         if (val.type != VAL_NUM) error("Type mismatch, expected number");
+                         ptr->type = VAL_NUM;
+                         ptr->num = val.num;
+                     }
+                }
+            }
+            
+        } else if (current_token == TOK_EQ) {
             Value val;
             next_token();
             val = expression();

@@ -21,6 +21,7 @@
 #define MAX_VAR_NAME 32
 #define MAX_LINES 2000
 #define STACK_SIZE 100
+#define MAX_ARRAYS 50
 
 /* Token Types */
 typedef enum {
@@ -31,6 +32,7 @@ typedef enum {
     TOK_DIM, TOK_RUN, TOK_LIST, TOK_NEW, TOK_BYE, TOK_CLS,
     TOK_SIN, TOK_COS, TOK_TAN, TOK_ATN, TOK_EXP, TOK_LOG, TOK_SQR, TOK_INT, TOK_ABS, TOK_SGN, TOK_RND,
     TOK_TAB, TOK_SPC, TOK_INKEY, TOK_LEN,
+    TOK_ASC, TOK_CHR, TOK_MID, TOK_LEFT, TOK_RIGHT, TOK_VAL, TOK_STR,
     TOK_PLUS, TOK_MINUS, TOK_MUL, TOK_DIV, TOK_MOD,
     TOK_EQ, TOK_NE, TOK_LT, TOK_GT, TOK_LE, TOK_GE,
     TOK_LPAREN, TOK_RPAREN, TOK_COMMA, TOK_SEMICOLON, TOK_COLON,
@@ -56,11 +58,18 @@ typedef struct {
     char *text;
 } Line;
 
-/* Structure for a variable */
 typedef struct {
     char name[MAX_VAR_NAME];
     Value val;
 } Variable;
+
+/* Structure for Array */
+typedef struct {
+    char name[MAX_VAR_NAME];
+    ValType type;
+    int size;
+    Value *data; /* Dynamically allocated array of values */
+} Array;
 
 /* Structure for loop stack */
 typedef struct {
@@ -80,6 +89,8 @@ extern Line program[MAX_LINES];
 extern int program_line_count;
 extern Variable variables[100]; /* Simple symbol table */
 extern int var_count;
+extern Array arrays[MAX_ARRAYS];
+extern int array_count;
 extern ForLoop for_stack[STACK_SIZE];
 extern int for_sp;
 extern GosubFrame gosub_stack[STACK_SIZE];
@@ -130,6 +141,10 @@ void cmd_end(void);
 /* Variables */
 Value get_var(const char *name);
 void set_var(const char *name, Value val);
+
+/* Arrays */
+Value *get_array_ptr(const char *name, int index);
+void create_array(const char *name, int size);
 
 /* Utils */
 void error(const char *msg);

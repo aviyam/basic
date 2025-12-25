@@ -5,6 +5,8 @@ Line program[MAX_LINES];
 int program_line_count = 0;
 Variable variables[100];
 int var_count = 0;
+Array arrays[MAX_ARRAYS];
+int array_count = 0;
 ForLoop for_stack[STACK_SIZE];
 int for_sp = 0;
 GosubFrame gosub_stack[STACK_SIZE];

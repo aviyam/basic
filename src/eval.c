@@ -123,8 +123,42 @@ Value factor(void) {
         strcpy(val.str, token_string);
         next_token();
     } else if (current_token == TOK_IDENTIFIER) {
-        val = get_var(token_string);
+        char var_name[MAX_VAR_NAME];
+        strcpy(var_name, token_string);
         next_token();
+        
+        if (current_token == TOK_LPAREN) {
+            /* Array access */
+            int index;
+            next_token();
+            {
+                Value v = expression();
+                if (v.type != VAL_NUM) error("Array index must be number");
+                index = (int)v.num;
+            }
+            if (!match(TOK_RPAREN)) error("Expected ')'");
+            
+            Value *ptr = get_array_ptr(var_name, index);
+            if (ptr) {
+                 val = *ptr;
+                 /* If string, we must make a copy of it because the caller might free it "temporarily" 
+                    or assumes ownership. 
+                    Actually, if we return *ptr directly, valid for NUM. 
+                    For STR, *ptr has a char*. 
+                    Who owns it? The Array. 
+                    The evaluator assumes returned Value owns the string. 
+                    So we MUST copy.
+                 */
+                 if (val.type == VAL_STR && val.str) {
+                     char *copy = malloc(strlen(val.str) + 1);
+                     strcpy(copy, val.str);
+                     val.str = copy;
+                 }
+            }
+        } else {
+            /* Normal variable */
+            val = get_var(var_name);
+        }
     } else if (current_token == TOK_LPAREN) {
         next_token();
         val = expression();
@@ -150,6 +184,115 @@ Value factor(void) {
         val.num = (double)strlen(v.str);
         free(v.str);
         if (!match(TOK_RPAREN)) error("Missing ')' for LEN");
+    } else if (current_token == TOK_ASC) {
+        next_token();
+        if (!match(TOK_LPAREN)) error("Expected '(' for ASC");
+        Value v = expression();
+        if (v.type != VAL_STR) error("ASC expects string");
+        val.type = VAL_NUM;
+        val.num = (double)(unsigned char)v.str[0];
+        free(v.str);
+        if (!match(TOK_RPAREN)) error("Missing ')' for ASC");
+    } else if (current_token == TOK_CHR) {
+        next_token();
+        if (!match(TOK_LPAREN)) error("Expected '(' for CHR$");
+        Value v = expression();
+        if (v.type != VAL_NUM) error("CHR$ expects number");
+        val.type = VAL_STR;
+        val.str = malloc(2);
+        val.str[0] = (char)v.num;
+        val.str[1] = '\0';
+        if (!match(TOK_RPAREN)) error("Missing ')' for CHR$");
+    } else if (current_token == TOK_VAL) {
+        next_token();
+        if (!match(TOK_LPAREN)) error("Expected '(' for VAL");
+        Value v = expression();
+        if (v.type != VAL_STR) error("VAL expects string");
+        val.type = VAL_NUM;
+        val.num = atof(v.str);
+        free(v.str);
+        if (!match(TOK_RPAREN)) error("Missing ')' for VAL");
+    } else if (current_token == TOK_STR) {
+        next_token();
+        if (!match(TOK_LPAREN)) error("Expected '(' for STR$");
+        Value v = expression();
+        if (v.type != VAL_NUM) error("STR$ expects number");
+        val.type = VAL_STR;
+        val.str = malloc(64);
+        if (v.num == (int)v.num) sprintf(val.str, "%d", (int)v.num);
+        else sprintf(val.str, "%g", v.num);
+        if (!match(TOK_RPAREN)) error("Missing ')' for STR$");
+    } else if (current_token == TOK_MID) {
+        next_token();
+        if (!match(TOK_LPAREN)) error("Expected '(' for MID$");
+        Value v = expression();
+        if (v.type != VAL_STR) error("MID$ expects string");
+        if (!match(TOK_COMMA)) error("Expected ',' for MID$");
+        Value vstart = expression();
+        if (vstart.type != VAL_NUM) error("MID$ start expects number");
+        int start = (int)vstart.num;
+        int len = -1;
+        if (current_token == TOK_COMMA) {
+             next_token();
+             Value vlen = expression();
+             if (vlen.type != VAL_NUM) error("MID$ length expects number");
+             len = (int)vlen.num;
+        }
+        if (!match(TOK_RPAREN)) error("Missing ')' for MID$");
+        
+        val.type = VAL_STR;
+        int slen = strlen(v.str);
+        if (start < 1) start = 1; /* BASIC is 1-based usually */
+        start--; /* 0-based for C */
+        if (start >= slen) {
+             val.str = malloc(1);
+             val.str[0] = '\0';
+        } else {
+             if (len == -1 || start + len > slen) len = slen - start;
+             if (len < 0) len = 0;
+             val.str = malloc(len + 1);
+             strncpy(val.str, v.str + start, len);
+             val.str[len] = '\0';
+        }
+        free(v.str);
+    } else if (current_token == TOK_LEFT) {
+        next_token();
+        if (!match(TOK_LPAREN)) error("Expected '(' for LEFT$");
+        Value v = expression();
+        if (v.type != VAL_STR) error("LEFT$ expects string");
+        if (!match(TOK_COMMA)) error("Expected ',' for LEFT$");
+        Value vlen = expression();
+        if (vlen.type != VAL_NUM) error("LEFT$ length expects number");
+        int len = (int)vlen.num;
+        if (!match(TOK_RPAREN)) error("Missing ')' for LEFT$");
+        
+        val.type = VAL_STR;
+        int slen = strlen(v.str);
+        if (len > slen) len = slen;
+        if (len < 0) len = 0;
+        val.str = malloc(len+1);
+        strncpy(val.str, v.str, len);
+        val.str[len] = '\0';
+        free(v.str);
+    } else if (current_token == TOK_RIGHT) {
+        next_token();
+        if (!match(TOK_LPAREN)) error("Expected '(' for RIGHT$");
+        Value v = expression();
+        if (v.type != VAL_STR) error("RIGHT$ expects string");
+        if (!match(TOK_COMMA)) error("Expected ',' for RIGHT$");
+        Value vlen = expression();
+        if (vlen.type != VAL_NUM) error("RIGHT$ length expects number");
+        int len = (int)vlen.num;
+        if (!match(TOK_RPAREN)) error("Missing ')' for RIGHT$");
+        
+        val.type = VAL_STR;
+        int slen = strlen(v.str);
+        if (len > slen) len = slen;
+        if (len < 0) len = 0;
+        val.str = malloc(len+1);
+        strncpy(val.str, v.str + slen - len, len);
+        val.str[len] = '\0';
+        free(v.str);
     } else if (current_token >= TOK_SIN && current_token <= TOK_RND) {
         TokenType func = current_token;
         next_token();

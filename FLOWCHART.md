@@ -75,6 +75,7 @@ graph TD
         dispatch -- DATA --> cmd_data[cmd_data]
         dispatch -- READ --> cmd_read[cmd_read]
         dispatch -- RESTORE --> cmd_restore[cmd_restore]
+        dispatch -- DIM --> cmd_dim[cmd_dim]
         dispatch -- END --> cmd_end[End Execution]
         
         cmd_if -- Condition --> expr[expression]
@@ -95,6 +96,7 @@ graph TD
         factor -- Number --> val_num[Value]
         factor -- String --> val_str[Value]
         factor -- Variable --> get_var[get_var]
+        factor -- Array Access --> get_array[get_array_ptr]
         factor -- LEN --> len_func[Length]
         factor -- Function --> math_func[Math Funcs]
         factor -- Parens --> expr
