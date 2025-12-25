@@ -77,6 +77,7 @@ typedef struct {
     double target;
     double step;
     int line_idx; /* Index in the 'lines' array */
+    char *resume_ptr; /* Pointer into the line text to resume execution */
 } ForLoop;
 
 /* Structure for GOSUB stack */
@@ -97,6 +98,8 @@ extern GosubFrame gosub_stack[STACK_SIZE];
 extern int gosub_sp;
 extern int current_line_idx; /* Program Counter (index in program array) */
 extern int execution_finished;
+
+extern char *jump_to_ptr; /* If non-NULL, resume execution from here instead of start of line */
 
 extern jmp_buf error_jmp;
 extern int interactive_mode_active;

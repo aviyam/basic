@@ -18,6 +18,8 @@ int execution_finished = 0;
 int data_line_idx = 0;
 char *data_ptr = NULL;
 
+char *jump_to_ptr = NULL;
+
 jmp_buf error_jmp;
 int interactive_mode_active = 0;
 
@@ -176,7 +178,42 @@ int main(int argc, char **argv) {
     }
 
     load_program(argv[1]);
-    run_program();
+void run_program(void) {
+    current_line_idx = 0;
+    
+    /* Reset Data Pointer */
+    data_line_idx = 0;
+    data_ptr = NULL;
+    jump_to_ptr = NULL;
+    
+    while (current_line_idx < program_line_count && !execution_finished) {
+        if (jump_to_ptr != NULL) {
+            token_ptr = jump_to_ptr;
+            next_token();
+            jump_to_ptr = NULL;
+        } else {
+            init_tokenizer(program[current_line_idx].text);
+        }
+        
+        while (current_token != TOK_EOL && current_token != TOK_EOF && !execution_finished) {
+            int entry_line_idx = current_line_idx;
+            
+            exec_statement();
+            
+            if (current_line_idx != entry_line_idx) break;
+            
+            if (current_token == TOK_COLON) {
+                next_token();
+            } else if (current_token != TOK_EOL && current_token != TOK_EOF) {
+                 while (current_token != TOK_EOL && current_token != TOK_EOF) next_token();
+            }
+        }
+        if (jump_to_ptr == NULL) {
+            current_line_idx++;
+        }
+    }
+    restore_terminal();
+}
 
     return 0;
 }

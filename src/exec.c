@@ -315,7 +315,8 @@ void cmd_print(void) {
 void cmd_goto(void) {
     Value v;
     int idx;
-    next_token();
+    if (current_token == TOK_GOTO) next_token();
+    
     v = expression();
     if (v.type != VAL_NUM) error("Line number must be numeric");
     idx = find_line_index((int)v.num);
@@ -724,28 +725,27 @@ void cmd_read(void) {
 }
 
 void cmd_dim(void) {
-    char var_name[MAX_VAR_NAME];
-    int size;
+    next_token(); /* Consume DIM */
     
-    next_token();
-    if (current_token != TOK_IDENTIFIER) error("Expected array name");
-    strcpy(var_name, token_string);
-    next_token();
-    
-    if (!match(TOK_LPAREN)) error("Expected '('");
-    {
-        Value v = expression();
-        if (v.type != VAL_NUM) error("Array dimension must be number");
-        size = (int)v.num;
-    }
-    if (!match(TOK_RPAREN)) error("Expected ')'");
-    
-    /* Standard BASIC defaults to base 0, so size 10 means indices 0..10 (size 11).
-       But let's stick to 0-indexed size for now. DIM A(10) -> size 11, indices 0..10 is common.
-       Or strict size 10 (0..9). 
-       Let's implement DIM A(N) -> Indices 0..N, so size is N+1. 
-    */
-    create_array(var_name, size + 1);
+    do {
+        char var_name[MAX_VAR_NAME];
+        int size;
+        
+        if (current_token != TOK_IDENTIFIER) error("Expected array name");
+        strcpy(var_name, token_string);
+        next_token();
+        
+        if (!match(TOK_LPAREN)) error("Expected '('");
+        {
+            Value v = expression();
+            if (v.type != VAL_NUM) error("Array dimension must be number");
+            size = (int)v.num;
+        }
+        if (!match(TOK_RPAREN)) error("Expected ')'");
+        
+        create_array(var_name, size + 1);
+        
+    } while (match(TOK_COMMA));
 }
 
 void exec_statement(void) {
@@ -830,29 +830,6 @@ void exec_statement(void) {
 }
 
 void run_program(void) {
-    current_line_idx = 0;
     
-    /* Reset Data Pointer */
-    data_line_idx = 0;
-    data_ptr = NULL;
-    
-    while (current_line_idx < program_line_count && !execution_finished) {
-        init_tokenizer(program[current_line_idx].text);
-        
-        while (current_token != TOK_EOL && current_token != TOK_EOF && !execution_finished) {
-            int entry_line_idx = current_line_idx;
-            
-            exec_statement();
-            
-            if (current_line_idx != entry_line_idx) break;
-            
-            if (current_token == TOK_COLON) {
-                next_token();
-            } else if (current_token != TOK_EOL && current_token != TOK_EOF) {
-                 while (current_token != TOK_EOL && current_token != TOK_EOF) next_token();
-            }
-        }
-        current_line_idx++;
-    }
-    restore_terminal();
 }
+```
