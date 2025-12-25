@@ -33,6 +33,7 @@ OBJS = $(SRCS:.c=.o)
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
+	@mkdir -p ./bin
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) -lm
 	strip $(TARGET)
 	rm -f $(OBJS)
