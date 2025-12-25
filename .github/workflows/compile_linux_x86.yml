@@ -21,4 +21,8 @@ jobs:
     - name: make
       run: make
  
-  
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: bin/basic
