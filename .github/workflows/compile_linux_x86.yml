@@ -26,3 +26,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: bin/basic
+        draft: false
+        prerelease: false
+        name: Release ${{ github.ref_name }}
+        tag_name: ${{ github.ref_name }}
