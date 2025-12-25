@@ -16,27 +16,10 @@ You can either run it on its own (to enter interactive mode), or pass a file to 
 
 The interpreter supports shebangs (`#!/path/to/basic`) by ignoring the first line if it starts with `#`.
 
-## Features
+## Language Reference
+For a complete list of commands, functions, and features, please see the [Language Reference](LANGUAGE_REFERENCE.md).
 
-- **Variables**: Numeric (`A=10`) and String (`A$="Hello"`)
-- **Arrays**: Multi-dimensional Numeric and String arrays implicitly or via `DIM` (e.g. `DIM A(10,10)`)
-- **Control Flow**: `IF/THEN/GOTO`, `FOR/NEXT`, `GOSUB/RETURN`, `ON...GOTO`
-- **Math**: `SIN`, `COS`, `TAN`, `LOG`, `EXP`, `SQR`, `INT`, `ABS`, `RND`
-- **Logic**: `AND`, `OR`, `NOT`
-- **String**: `LEN`, `ASC`, `CHR$`, `MID$`, `LEFT$`, `RIGHT$`, `VAL`, `STR$`, `INKEY$`
-- **Functions**: User-defined functions via `DEF FN` (e.g. `DEF FNA(X)=X*X`)
-- **I/O**: `PRINT`, `INPUT`, `CLS`, `SLEEP`
-- **Data**: `DATA`, `READ`, `RESTORE`
-- **Management**: `LIST`, `RUN`, `NEW`, `SAVE`, `LOAD`, `EDIT`
-
-Note: File operations (`SAVE`, `LOAD`, `EDIT`, CLI argument) automatically append `.bas` if no extension is provided.
-Arrays must be declared with `DIM`. Indices are 0-based.
-
-## Example
-
-```basic
-10 PRINT "Square Number Table"
-20 FOR I = 1 TO 5
-30 PRINT I, I*I
-40 NEXT I
-```
+## Notes
+- File operations (`SAVE`, `LOAD`, `EDIT`, CLI argument) automatically append `.bas` if no extension is provided.
+- Arrays must be declared with `DIM`. Indices are 0-based.
+- Shebang support allows running scripts directly (e.g. `#!/usr/local/bin/basic`).
