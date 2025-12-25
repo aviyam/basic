@@ -1,3 +1,0 @@
-10 LET A$ = "HELLO"
-20 PRINT "LEN(A$)="; LEN(A$)
-30 PRINT "LEN('WORLD')="; LEN("WORLD")

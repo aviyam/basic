@@ -3,6 +3,8 @@
 A lightweight, efficient BASIC interpreter written in C99. Optimized for small binary size (~36KB) and compatibility with MS-DOS BASIC.
 Written for fun and learning purposes, by Gemini AI with guidance (and a few tweaks) from me.
 
+Tested with programs from the [BASIC Computer Games](http://www.vintage-basic.net/games.html) book. All BCG files are in the examples/bcg directory.
+
 ## Build
 
 ```bash
@@ -10,7 +12,8 @@ make
 ```
 
 ## Usage
-You can either run it on its own, or pass a file to it.
+You can either run it on its own (to enter interactive mode), or pass a file to it to start running.
+
 
 ## Features
 

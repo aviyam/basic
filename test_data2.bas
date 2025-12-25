@@ -1,6 +1,0 @@
-10 READ S$, N
-20 PRINT "S="; S$, "N="; N
-30 DATA "HELLO", 123
-40 READ X, Y$
-50 PRINT "X="; X, "Y="; Y$
-60 DATA 456, WORLD
