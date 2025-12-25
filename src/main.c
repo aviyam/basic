@@ -12,6 +12,10 @@ int gosub_sp = 0;
 int current_line_idx = 0;
 int execution_finished = 0;
 
+/* Data pointer globals */
+int data_line_idx = 0;
+char *data_ptr = NULL;
+
 jmp_buf error_jmp;
 int interactive_mode_active = 0;
 
@@ -110,10 +114,14 @@ void process_line(char *buffer) {
 void load_program(const char *filename) {
     FILE *fp;
     char buffer[MAX_LINE_LEN];
+    char path[MAX_LINE_LEN];
     
-    fp = fopen(filename, "r");
+    strcpy(path, filename);
+    ensure_extension(path);
+    
+    fp = fopen(path, "r");
     if (!fp) {
-        fprintf(stderr, "Could not open file %s\n", filename);
+        fprintf(stderr, "Could not open file %s\n", path);
         exit(1);
     }
 

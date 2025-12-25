@@ -1,6 +1,6 @@
 # Tiny BASIC Interpreter
 
-A lightweight, efficient BASIC interpreter written in C89. Optimized for small binary size (~36KB).
+A lightweight, efficient BASIC interpreter written in C99. Optimized for small binary size (~36KB) and compatibility with MS-DOS BASIC.
 Written for fun and learning purposes, by Gemini AI with guidance (and a few tweaks) from me.
 
 ## Build
@@ -17,8 +17,12 @@ You can either run it on its own, or pass a file to it.
 - **Variables**: Numeric (`A=10`) and String (`A$="Hello"`)
 - **Control Flow**: `IF/THEN/GOTO`, `FOR/NEXT`, `GOSUB/RETURN`
 - **Math**: `SIN`, `COS`, `TAN`, `LOG`, `EXP`, `SQR`, `INT`, `ABS`, `RND`
-- **I/O**: `PRINT`, `INPUT`, `INKEY$`, `CLS`, `SLEEP`
+- **String**: `LEN`, `INKEY$`
+- **I/O**: `PRINT`, `INPUT`, `CLS`, `SLEEP`
+- **Data**: `DATA`, `READ`, `RESTORE`
 - **Management**: `LIST`, `RUN`, `NEW`, `SAVE`, `LOAD`, `EDIT`
+
+Note: File operations (`SAVE`, `LOAD`, `EDIT`, CLI argument) automatically append `.bas` if no extension is provided.
 
 ## Example
 

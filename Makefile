@@ -12,15 +12,15 @@ LDFLAGS =
 # Check for Windows (MinGW/Cygwin)
 ifeq ($(UNAME_S),CYGWIN_NT)
     CC = gcc
-    CFLAGS += -Wall -pedantic -std=c89 -D_POSIX_C_SOURCE=200809L -D_WIN32
+    CFLAGS += -Wall -pedantic -std=c99 -D_POSIX_C_SOURCE=200809L -D_WIN32
     LDFLAGS += -lws2_32 # Link with Winsock for select()
 else ifeq ($(UNAME_S),MINGW32_NT)
     CC = gcc
-    CFLAGS += -Wall -pedantic -std=c89 -D_POSIX_C_SOURCE=200809L -D_WIN32
+    CFLAGS += -Wall -pedantic -std=c99 -D_POSIX_C_SOURCE=200809L -D_WIN32
     LDFLAGS += -lws2_32
 else
     # MacOS / Linux (POSIX)
-    CFLAGS += -Wall -pedantic -std=c89 -D_POSIX_C_SOURCE=200809L
+    CFLAGS += -Wall -pedantic -std=c99 -D_POSIX_C_SOURCE=200809L
 endif
 
 TARGET = ./bin/basic

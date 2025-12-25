@@ -30,11 +30,12 @@ typedef enum {
     TOK_REM, TOK_LET, TOK_INPUT, TOK_END, TOK_SLEEP, TOK_GOSUB, TOK_RETURN,
     TOK_DIM, TOK_RUN, TOK_LIST, TOK_NEW, TOK_BYE, TOK_CLS,
     TOK_SIN, TOK_COS, TOK_TAN, TOK_ATN, TOK_EXP, TOK_LOG, TOK_SQR, TOK_INT, TOK_ABS, TOK_SGN, TOK_RND,
-    TOK_TAB, TOK_SPC, TOK_INKEY,
+    TOK_TAB, TOK_SPC, TOK_INKEY, TOK_LEN,
     TOK_PLUS, TOK_MINUS, TOK_MUL, TOK_DIV, TOK_MOD,
     TOK_EQ, TOK_NE, TOK_LT, TOK_GT, TOK_LE, TOK_GE,
     TOK_LPAREN, TOK_RPAREN, TOK_COMMA, TOK_SEMICOLON, TOK_COLON,
-    TOK_SAVE, TOK_LOAD, TOK_EDIT
+    TOK_SAVE, TOK_LOAD, TOK_EDIT,
+    TOK_DATA, TOK_READ, TOK_RESTORE
 } TokenType;
 
 /* Value Type */
@@ -89,6 +90,10 @@ extern int execution_finished;
 extern jmp_buf error_jmp;
 extern int interactive_mode_active;
 
+/* Data Pointer State */
+extern int data_line_idx;
+extern char *data_ptr;
+
 /* Lexer State */
 extern char *token_ptr;
 extern TokenType current_token;
@@ -134,5 +139,8 @@ int find_line_index(int line_num);
 char *get_inkey(void);
 void setup_terminal(void);
 void restore_terminal(void);
+
+/* Utils */
+void ensure_extension(char *filename);
 
 #endif

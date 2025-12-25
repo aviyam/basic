@@ -141,6 +141,15 @@ Value factor(void) {
         next_token(); /* Consume INKEY$ */
         val.type = VAL_STR;
         val.str = get_inkey();
+    } else if (current_token == TOK_LEN) {
+        next_token();
+        if (!match(TOK_LPAREN)) error("Expected '(' for LEN");
+        Value v = expression();
+        if (v.type != VAL_STR) error("LEN expects string");
+        val.type = VAL_NUM;
+        val.num = (double)strlen(v.str);
+        free(v.str);
+        if (!match(TOK_RPAREN)) error("Missing ')' for LEN");
     } else if (current_token >= TOK_SIN && current_token <= TOK_RND) {
         TokenType func = current_token;
         next_token();

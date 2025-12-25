@@ -114,14 +114,24 @@ void cmd_new(void) {
     clear_program_data();
 }
 
+// Helper to ensure .bas extension
+// Returns 1 if extension appended, 0 otherwise
+// Caller must ensure buffer is large enough
+void ensure_extension(char *filename) {
+    if (strchr(filename, '.') == NULL) {
+        strcat(filename, ".bas");
+    }
+}
+
 void cmd_save(void) {
-    char *filename;
+    char filename[MAX_LINE_LEN];
     FILE *fp;
     int i;
     
     next_token();
     if (current_token != TOK_STRING) error("Expected filename string");
-    filename = token_string;
+    strcpy(filename, token_string);
+    ensure_extension(filename);
     
     fp = fopen(filename, "w");
     if (!fp) error("Could not open file for writing");
@@ -140,6 +150,7 @@ void cmd_load(void) {
     next_token();
     if (current_token != TOK_STRING) error("Expected filename string");
     strcpy(filename, token_string);
+    ensure_extension(filename);
     
     clear_program_data();
     load_program(filename);
@@ -514,6 +525,142 @@ void cmd_rem(void) {
     while (current_token != TOK_EOL && current_token != TOK_EOF) next_token();
 }
 
+void cmd_data(void) {
+    while (current_token != TOK_EOL && current_token != TOK_EOF && current_token != TOK_COLON) {
+        next_token();
+    }
+}
+
+void cmd_restore(void) {
+    next_token();
+    if (current_token == TOK_NUMBER) {
+         int idx = find_line_index((int)token_number);
+         if (idx == -1) error("Line not found");
+         data_line_idx = idx;
+         next_token();
+    } else {
+         data_line_idx = 0;
+    }
+    data_ptr = NULL;
+}
+
+void cmd_read(void) {
+    next_token(); /* Consume READ */
+    
+    do {
+         char var_name[MAX_VAR_NAME];
+         Value val = {0};
+         /* Variables for saving main lexer state */
+         char *main_token_ptr;
+         TokenType main_token;
+         double main_token_number;
+         char main_token_string[MAX_LINE_LEN];
+         
+         /* Main lexer: get variable name */
+         if (current_token != TOK_IDENTIFIER) error("Expected variable in READ");
+         strcpy(var_name, token_string);
+         next_token(); 
+         
+         /* Save Main Lexer State */
+         main_token_ptr = token_ptr;
+         main_token = current_token;
+         main_token_number = token_number;
+         strcpy(main_token_string, token_string);
+         
+         /* Find value from DATA */
+         {
+             int found_value = 0;
+             while (!found_value) {
+                 if (data_ptr == NULL) {
+                     /* Scan for next DATA statement */
+                     while (data_line_idx < program_line_count) {
+                          char *p = program[data_line_idx].text;
+                          int found_data = 0;
+
+                          init_tokenizer(p); 
+                          
+                          while(current_token != TOK_EOL && current_token != TOK_EOF) {
+                              if (current_token == TOK_DATA) {
+                                  found_data = 1;
+                                  /* next_token();  -- Removed because we want data_ptr to point to the first value */
+                                  data_ptr = token_ptr;
+                                  break;
+                              }
+                              /* Skip statement */
+                              while(current_token != TOK_EOL && current_token != TOK_EOF && current_token != TOK_COLON) {
+                                  next_token();
+                              }
+                              if (current_token == TOK_COLON) next_token();
+                          }
+                          
+                          if (found_data) break;
+                          data_line_idx++;
+                     }
+                     if (data_line_idx >= program_line_count) {
+                         error("Out of DATA");
+                     }
+                 }
+                 
+                 /* Read from data_ptr */
+                 token_ptr = data_ptr;
+                 next_token();
+                 
+                 if (current_token == TOK_EOL || current_token == TOK_EOF || current_token == TOK_COLON) {
+                     data_ptr = NULL;
+                     data_line_idx++; /* This DATA statement is exhausted */
+                     continue;
+                 }
+                 
+                 if (current_token == TOK_COMMA) {
+                     next_token();
+                 }
+                 
+                 if (current_token == TOK_EOL || current_token == TOK_EOF || current_token == TOK_COLON) {
+                     data_ptr = NULL;
+                     data_line_idx++; 
+                     continue;
+                 }
+                 
+                 /* Parse Value */
+                 if (current_token == TOK_STRING) {
+                     val.type = VAL_STR;
+                     val.str = malloc(strlen(token_string)+1);
+                     strcpy(val.str, token_string);
+                 } else if (current_token == TOK_NUMBER) {
+                     val.type = VAL_NUM;
+                     val.num = token_number;
+                 } else if (current_token == TOK_MINUS) {
+                      next_token();
+                      if (current_token == TOK_NUMBER) {
+                          val.type = VAL_NUM;
+                          val.num = -token_number;
+                      } else {
+                          error("Syntax error in DATA");
+                      }
+                 } else if (current_token == TOK_IDENTIFIER) {
+                     val.type = VAL_STR;
+                     val.str = malloc(strlen(token_string)+1);
+                     strcpy(val.str, token_string);
+                 } else {
+                     error("Syntax error in DATA");
+                 }
+                 
+                 data_ptr = token_ptr;
+                 found_value = 1;
+             }
+         }
+         
+         /* Restore Main Lexer */
+         token_ptr = main_token_ptr;
+         current_token = main_token;
+         token_number = main_token_number;
+         strcpy(token_string, main_token_string);
+         
+         set_var(var_name, val);
+         
+    } while (match(TOK_COMMA));
+}
+
 void exec_statement(void) {
     if (current_token == TOK_PRINT) cmd_print();
     else if (current_token == TOK_IF) cmd_if();
@@ -535,6 +682,9 @@ void exec_statement(void) {
     else if (current_token == TOK_BYE) cmd_bye();
     else if (current_token == TOK_CLS) cmd_cls();
     else if (current_token == TOK_REM) cmd_rem();
+    else if (current_token == TOK_DATA) cmd_data();
+    else if (current_token == TOK_READ) cmd_read();
+    else if (current_token == TOK_RESTORE) cmd_restore();
     else if (current_token == TOK_IDENTIFIER) {
         char var_name[MAX_VAR_NAME];
         strcpy(var_name, token_string);
@@ -557,6 +707,11 @@ void exec_statement(void) {
 
 void run_program(void) {
     current_line_idx = 0;
+    
+    /* Reset Data Pointer */
+    data_line_idx = 0;
+    data_ptr = NULL;
+    
     while (current_line_idx < program_line_count && !execution_finished) {
         init_tokenizer(program[current_line_idx].text);
         
