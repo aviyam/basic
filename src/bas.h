@@ -38,7 +38,7 @@ typedef enum {
     TOK_LPAREN, TOK_RPAREN, TOK_COMMA, TOK_SEMICOLON, TOK_COLON,
     TOK_SAVE, TOK_LOAD, TOK_EDIT,
     TOK_DATA, TOK_READ, TOK_RESTORE,
-    TOK_STOP
+    TOK_STOP, TOK_DEF
 } TokenType;
 
 /* Value Type */
@@ -63,6 +63,12 @@ typedef struct {
     char name[MAX_VAR_NAME];
     Value val;
 } Variable;
+
+typedef struct {
+    char arg_name[MAX_VAR_NAME];
+    char *expr_text;
+    int defined;
+} UserFunc;
 
 /* Structure for Array */
 typedef struct {
@@ -93,6 +99,7 @@ extern Variable variables[100]; /* Simple symbol table */
 extern int var_count;
 extern Array arrays[MAX_ARRAYS];
 extern int array_count;
+extern UserFunc user_functions[26];
 extern ForLoop for_stack[STACK_SIZE];
 extern int for_sp;
 extern GosubFrame gosub_stack[STACK_SIZE];

@@ -125,35 +125,71 @@ Value factor(void) {
     } else if (current_token == TOK_IDENTIFIER) {
         char var_name[MAX_VAR_NAME];
         strcpy(var_name, token_string);
+        
+        /* Check if User Function is defined */
+        int is_fn = 0;
+        int fn_idx = -1;
+        if (strncmp(var_name, "FN", 2) == 0 && strlen(var_name) == 3) {
+             fn_idx = toupper(var_name[2]) - 'A';
+             if (fn_idx >= 0 && fn_idx <= 25 && user_functions[fn_idx].defined) {
+                 is_fn = 1;
+             }
+        }
+        
         next_token();
         
         if (current_token == TOK_LPAREN) {
-            /* Array access */
-            int index;
-            next_token();
-            {
-                Value v = expression();
-                if (v.type != VAL_NUM) error("Array index must be number");
-                index = (int)v.num;
-            }
-            if (!match(TOK_RPAREN)) error("Expected ')'");
-            
-            Value *ptr = get_array_ptr(var_name, index);
-            if (ptr) {
-                 val = *ptr;
-                 /* If string, we must make a copy of it because the caller might free it "temporarily" 
-                    or assumes ownership. 
-                    Actually, if we return *ptr directly, valid for NUM. 
-                    For STR, *ptr has a char*. 
-                    Who owns it? The Array. 
-                    The evaluator assumes returned Value owns the string. 
-                    So we MUST copy.
-                 */
-                 if (val.type == VAL_STR && val.str) {
-                     char *copy = malloc(strlen(val.str) + 1);
-                     strcpy(copy, val.str);
-                     val.str = copy;
-                 }
+            if (is_fn) {
+                 /* Handle User Function Call */
+                 next_token();
+                 Value varg = expression();
+                 if (!match(TOK_RPAREN)) error("Expected ')' for FN");
+                 
+                 /* Save Parser State */
+                 char *save_token_ptr = token_ptr;
+                 TokenType save_token = current_token;
+                 double save_num = token_number;
+                 char save_str[MAX_LINE_LEN];
+                 strcpy(save_str, token_string);
+                 
+                 /* Save Arg Var */
+                 Value old_val = get_var(user_functions[fn_idx].arg_name);
+                 
+                 /* Set Arg Var */
+                 set_var(user_functions[fn_idx].arg_name, varg);
+                 
+                 /* Execute Expression */
+                 init_tokenizer(user_functions[fn_idx].expr_text);
+                 val = expression();
+                 
+                 /* Restore Arg Var */
+                 set_var(user_functions[fn_idx].arg_name, old_val);
+                 
+                 /* Restore Parser State */
+                 token_ptr = save_token_ptr;
+                 current_token = save_token;
+                 token_number = save_num;
+                 strcpy(token_string, save_str);
+            } else {
+                /* Array access */
+                int index;
+                next_token();
+                {
+                    Value v = expression();
+                    if (v.type != VAL_NUM) error("Array index must be number");
+                    index = (int)v.num;
+                }
+                if (!match(TOK_RPAREN)) error("Expected ')'");
+                
+                Value *ptr = get_array_ptr(var_name, index);
+                if (ptr) {
+                     val = *ptr;
+                     if (val.type == VAL_STR && val.str) {
+                         char *copy = malloc(strlen(val.str) + 1);
+                         strcpy(copy, val.str);
+                         val.str = copy;
+                     }
+                }
             }
         } else {
             /* Normal variable */

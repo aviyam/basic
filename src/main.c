@@ -7,6 +7,7 @@ Variable variables[100];
 int var_count = 0;
 Array arrays[MAX_ARRAYS];
 int array_count = 0;
+UserFunc user_functions[26];
 ForLoop for_stack[STACK_SIZE];
 int for_sp = 0;
 GosubFrame gosub_stack[STACK_SIZE];

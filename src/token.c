@@ -58,6 +58,7 @@ static Keyword keywords[] = {
     {"READ", TOK_READ},
     {"RESTORE", TOK_RESTORE},
     {"STOP", TOK_STOP},
+    {"DEF", TOK_DEF},
     {NULL, TOK_NONE}
 };
 

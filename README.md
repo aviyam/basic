@@ -23,6 +23,7 @@ The interpreter supports shebangs (`#!/path/to/basic`) by ignoring the first lin
 - **Control Flow**: `IF/THEN/GOTO`, `FOR/NEXT`, `GOSUB/RETURN`
 - **Math**: `SIN`, `COS`, `TAN`, `LOG`, `EXP`, `SQR`, `INT`, `ABS`, `RND`
 - **String**: `LEN`, `ASC`, `CHR$`, `MID$`, `LEFT$`, `RIGHT$`, `VAL`, `STR$`, `INKEY$`
+- **Functions**: User-defined functions via `DEF FN` (e.g. `DEF FNA(X)=X*X`)
 - **I/O**: `PRINT`, `INPUT`, `CLS`, `SLEEP`
 - **Data**: `DATA`, `READ`, `RESTORE`
 - **Management**: `LIST`, `RUN`, `NEW`, `SAVE`, `LOAD`, `EDIT`

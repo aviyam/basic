@@ -750,6 +750,48 @@ void cmd_dim(void) {
     } while (match(TOK_COMMA));
 }
 
+void cmd_def(void) {
+    char func_name[MAX_VAR_NAME];
+    char arg_name[MAX_VAR_NAME];
+    int func_idx;
+    char *expr_start;
+    
+    next_token(); /* Consume DEF */
+    
+    if (current_token != TOK_IDENTIFIER) error("Expected function name");
+    strcpy(func_name, token_string);
+    
+    if (strncmp(func_name, "FN", 2) != 0 || strlen(func_name) != 3) {
+        error("Invalid function name (must be FNA-FNZ)");
+    }
+    func_idx = toupper(func_name[2]) - 'A';
+    if (func_idx < 0 || func_idx > 25) error("Invalid function letter");
+    
+    next_token();
+    if (!match(TOK_LPAREN)) error("Expected '('");
+    
+    if (current_token != TOK_IDENTIFIER) error("Expected argument name");
+    strcpy(arg_name, token_string);
+    next_token();
+    
+    if (!match(TOK_RPAREN)) error("Expected ')'");
+    
+    if (current_token != TOK_EQ) error("Expected '='");
+    /* token_ptr points to the content after '=' because next_token() for '=' has already run. */
+    expr_start = token_ptr;
+    next_token(); /* Consume '='. Now current_token is the first token of logical expression. */
+    
+    /* Save definition */
+    strcpy(user_functions[func_idx].arg_name, arg_name);
+    user_functions[func_idx].expr_text = expr_start;
+    user_functions[func_idx].defined = 1;
+    
+    /* Skip to end of statement */
+    while (current_token != TOK_EOL && current_token != TOK_COLON) {
+        next_token();
+    }
+}
+
 void exec_statement(void) {
     if (current_token == TOK_PRINT) cmd_print();
     else if (current_token == TOK_IF) cmd_if();
@@ -757,6 +799,7 @@ void exec_statement(void) {
     else if (current_token == TOK_FOR) cmd_for();
     else if (current_token == TOK_NEXT) cmd_next();
     else if (current_token == TOK_LET) cmd_let();
+    else if (current_token == TOK_DEF) cmd_def();
     else if (current_token == TOK_INPUT) cmd_input();
     else if (current_token == TOK_SLEEP) cmd_sleep();
     else if (current_token == TOK_GOSUB) cmd_gosub();

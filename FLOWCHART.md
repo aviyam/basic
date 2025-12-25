@@ -76,6 +76,7 @@ graph TD
         dispatch -- READ --> cmd_read[cmd_read]
         dispatch -- RESTORE --> cmd_restore[cmd_restore]
         dispatch -- DIM --> cmd_dim[cmd_dim]
+        dispatch -- DEF --> cmd_def[cmd_def]
         dispatch -- END --> cmd_end[End Execution]
         
         cmd_if -- Condition --> expr[expression]
