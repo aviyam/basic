@@ -93,12 +93,11 @@ graph TD
         additive --> term
         term --> factor
         
-        factor -- Number --> val_num[Value]
         factor -- String --> val_str[Value]
         factor -- Variable --> get_var[get_var]
         factor -- Array Access --> get_array[get_array_ptr]
-        factor -- LEN --> len_func[Length]
-        factor -- Function --> math_func[Math Funcs]
+        factor -- String Funcs --> string_func[LEN, ASC, MID$...]
+        factor -- Math Funcs --> math_func[SIN, COS...]
         factor -- Parens --> expr
     end
 ```

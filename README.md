@@ -18,7 +18,7 @@ You can either run it on its own, or pass a file to it.
 - **Arrays**: 1D Numeric and String arrays implicitly or via `DIM` (e.g. `DIM A(10)`)
 - **Control Flow**: `IF/THEN/GOTO`, `FOR/NEXT`, `GOSUB/RETURN`
 - **Math**: `SIN`, `COS`, `TAN`, `LOG`, `EXP`, `SQR`, `INT`, `ABS`, `RND`
-- **String**: `LEN`, `INKEY$`
+- **String**: `LEN`, `ASC`, `CHR$`, `MID$`, `LEFT$`, `RIGHT$`, `VAL`, `STR$`, `INKEY$`
 - **I/O**: `PRINT`, `INPUT`, `CLS`, `SLEEP`
 - **Data**: `DATA`, `READ`, `RESTORE`
 - **Management**: `LIST`, `RUN`, `NEW`, `SAVE`, `LOAD`, `EDIT`
