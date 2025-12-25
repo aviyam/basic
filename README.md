@@ -19,9 +19,10 @@ The interpreter supports shebangs (`#!/path/to/basic`) by ignoring the first lin
 ## Features
 
 - **Variables**: Numeric (`A=10`) and String (`A$="Hello"`)
-- **Arrays**: 1D Numeric and String arrays implicitly or via `DIM` (e.g. `DIM A(10)`)
-- **Control Flow**: `IF/THEN/GOTO`, `FOR/NEXT`, `GOSUB/RETURN`
+- **Arrays**: Multi-dimensional Numeric and String arrays implicitly or via `DIM` (e.g. `DIM A(10,10)`)
+- **Control Flow**: `IF/THEN/GOTO`, `FOR/NEXT`, `GOSUB/RETURN`, `ON...GOTO`
 - **Math**: `SIN`, `COS`, `TAN`, `LOG`, `EXP`, `SQR`, `INT`, `ABS`, `RND`
+- **Logic**: `AND`, `OR`, `NOT`
 - **String**: `LEN`, `ASC`, `CHR$`, `MID$`, `LEFT$`, `RIGHT$`, `VAL`, `STR$`, `INKEY$`
 - **Functions**: User-defined functions via `DEF FN` (e.g. `DEF FNA(X)=X*X`)
 - **I/O**: `PRINT`, `INPUT`, `CLS`, `SLEEP`

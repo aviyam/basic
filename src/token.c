@@ -62,6 +62,7 @@ static Keyword keywords[] = {
     {"AND", TOK_AND},
     {"OR", TOK_OR},
     {"NOT", TOK_NOT},
+    {"ON", TOK_ON},
     {NULL, TOK_NONE}
 };
 

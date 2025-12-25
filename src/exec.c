@@ -410,9 +410,16 @@ void cmd_let(void) {
 }
 
 void cmd_input(void) {
-    char var_name[MAX_VAR_NAME];
-    char buffer[128];
-    Value val;
+    char input_buffer[MAX_LINE_LEN];
+    char *input_ptr_save = NULL;
+    int first_var = 1;
+    
+    /* Save main lexer state globals */
+    char *main_token_ptr;
+    TokenType main_token;
+    double main_token_number;
+    char main_token_string[MAX_LINE_LEN];
+
     next_token();
     if (current_token == TOK_STRING) {
         printf("%s", token_string);
@@ -426,26 +433,140 @@ void cmd_input(void) {
         current_column += 2;
     }
     
-    if (current_token != TOK_IDENTIFIER) error("Expected variable");
-    strcpy(var_name, token_string);
-    next_token();
-
+    /* Read Line */
     restore_terminal();
-    if (fgets(buffer, sizeof(buffer), stdin)) {
-        size_t len = strlen(buffer);
-        if (len > 0 && buffer[len-1] == '\n') buffer[len-1] = '\0';
-        
-        if (strchr(var_name, '$')) {
-            val.type = VAL_STR;
-            val.str = malloc(strlen(buffer) + 1);
-            strcpy(val.str, buffer);
-        } else {
-            val.type = VAL_NUM;
-            val.num = atof(buffer);
-        }
-        set_var(var_name, val);
-        current_column = 0;
+    if (!fgets(input_buffer, sizeof(input_buffer), stdin)) return;
+    {
+        size_t len = strlen(input_buffer);
+        if (len > 0 && input_buffer[len-1] == '\n') input_buffer[len-1] = '\0';
     }
+    current_column = 0;
+    
+    /* We will alternate between parsing the program (for variable names) 
+       and parsing the input buffer (for values). 
+       This is tricky because next_token() modifies global state.
+    */
+    
+    /* Initialize input parsing state manually or via helper? 
+       We need to "start" tokenizing input_buffer.
+       We can't just call init_tokenizer because it resets generic state.
+       We have to save program state FIRST.
+    */
+
+    /* Loop over variables in program */
+    do {
+         char var_name[MAX_VAR_NAME];
+         Value val = {0};
+         
+         if (current_token != TOK_IDENTIFIER) error("Expected variable");
+         strcpy(var_name, token_string);
+         next_token(); /* Consume variable in program */
+         
+         /* Save program state */
+         main_token_ptr = token_ptr;
+         main_token = current_token;
+         main_token_number = token_number;
+         strcpy(main_token_string, token_string);
+         
+         /* Switch to input buffer */
+         if (first_var) {
+             init_tokenizer(input_buffer);
+             first_var = 0;
+         } else {
+             /* Restore input buffer state from previous iteration? 
+                Actually init_tokenizer resets everything. 
+                We need to maintain the input lexer state separately?
+                Or just save/restore properly.
+                
+                If we swap state back and forth, we need to save INPUT state too.
+             */
+             token_ptr = input_ptr_save;
+             next_token(); /* Advance in input */
+         }
+         
+         /* Parse value from input */
+         if (current_token == TOK_EOL || current_token == TOK_EOF) {
+             /* Not enough input? Treat as zero/empty? Or Error? Basic usually asks "??" */
+             /* For simplicity, default zero/empty */
+             if (strchr(var_name, '$')) {
+                 val.type = VAL_STR;
+                 val.str = malloc(1); val.str[0] = 0;
+             } else {
+                 val.type = VAL_NUM; val.num = 0.0;
+             }
+         } else {
+             /* Get value */
+             if (current_token == TOK_MINUS) {
+                  next_token();
+                  if (current_token == TOK_NUMBER) {
+                      val.type = VAL_NUM;
+                      val.num = -token_number;
+                      next_token();
+                  } else error("Input error");
+             } else if (current_token == TOK_NUMBER) {
+                 val.type = VAL_NUM;
+                 val.num = token_number;
+                 next_token();
+             } else if (current_token == TOK_STRING) {
+                 val.type = VAL_STR;
+                 val.str = malloc(strlen(token_string)+1);
+                 strcpy(val.str, token_string);
+                 next_token();
+             } else {
+                 /* Maybe unquoted string? Tokenizer might identify as IDENTIFIER? */
+                 /* For INPUT, often unquoted strings are allowed. 
+                    If tokenizer sees IDENTIFIER, treat as string? */
+                 if (current_token == TOK_IDENTIFIER) {
+                     val.type = VAL_STR;
+                     val.str = malloc(strlen(token_string)+1);
+                     strcpy(val.str, token_string);
+                     next_token();
+                 } else {
+                     /* Fallback for numbers not parsed correctly? */
+                      val.type = VAL_NUM; val.num = 0.0;
+                 }
+             }
+         }
+         
+         /* Save input buffer state */
+         input_ptr_save = token_ptr;
+         
+         /* Restore program state */
+         token_ptr = main_token_ptr;
+         current_token = main_token;
+         token_number = main_token_number;
+         strcpy(token_string, main_token_string);
+         
+         /* Assign */
+         if (strchr(var_name, '$')) {
+             if (val.type != VAL_STR) {
+                 /* Conversion or error? */
+                 /* If we read a number into a string var? Convert it? */
+                 if (val.type == VAL_NUM) {
+                     val.type = VAL_STR;
+                     val.str = malloc(32);
+                     sprintf(val.str, "%g", val.num);
+                 }
+             }
+         } else {
+             if (val.type != VAL_NUM) {
+                 if (val.type == VAL_STR) {
+                     val.type = VAL_NUM;
+                     val.num = atof(val.str);
+                     free(val.str);
+                 }
+             }
+         }
+         
+         set_var(var_name, val);
+         
+         if (match(TOK_COMMA)) {
+             /* Continue loop */
+         } else {
+             break;
+         }
+         
+    } while (1);
 }
 
 void cmd_sleep(void) {
@@ -799,6 +920,33 @@ void cmd_def(void) {
     }
 }
 
+void cmd_on(void) {
+    next_token(); /* Consume ON */
+    Value v = expression();
+    if (v.type != VAL_NUM) error("ON expects number");
+    int choice = (int)v.num;
+    
+    if (!match(TOK_GOTO)) error("Expected GOTO");
+    
+    int target_line = -1;
+    int current_choice = 1;
+    
+    do {
+         Value vline = expression();
+         if (current_choice == choice) {
+             if (vline.type != VAL_NUM) error("Line number must be numeric");
+             target_line = (int)vline.num;
+         }
+         current_choice++;
+    } while (match(TOK_COMMA));
+    
+    if (target_line != -1) {
+         int idx = find_line_index(target_line);
+         if (idx == -1) error("Line not found");
+         current_line_idx = idx - 1;
+    }
+}
+
 void exec_statement(void) {
     if (current_token == TOK_PRINT) cmd_print();
     else if (current_token == TOK_IF) cmd_if();
@@ -807,6 +955,7 @@ void exec_statement(void) {
     else if (current_token == TOK_NEXT) cmd_next();
     else if (current_token == TOK_LET) cmd_let();
     else if (current_token == TOK_DEF) cmd_def();
+    else if (current_token == TOK_ON) cmd_on();
     else if (current_token == TOK_INPUT) cmd_input();
     else if (current_token == TOK_SLEEP) cmd_sleep();
     else if (current_token == TOK_GOSUB) cmd_gosub();

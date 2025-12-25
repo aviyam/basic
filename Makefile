@@ -25,7 +25,7 @@ endif
 
 TARGET = ./bin/basic
 SRCS = ./src/main.c ./src/token.c ./src/eval.c ./src/exec.c ./src/var.c
-# SRCS = main.c token.c eval.c exec.c var.c
+
 OBJS = $(SRCS:.c=.o)
 
 .PHONY: clean all
