@@ -14,8 +14,6 @@ binary will be built in the bin directory
 ## Usage
 You can either run it on its own (to enter interactive mode), or pass a file to it to start running.
 
-The interpreter supports shebangs (`#!/path/to/basic`) by ignoring the first line if it starts with `#`.
-
 ## Language Reference
 For a complete list of commands, functions, and features, please see the [Language Reference](LANGUAGE_REFERENCE.md).
 
