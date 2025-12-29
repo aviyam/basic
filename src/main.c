@@ -164,7 +164,12 @@ void sort_program(void) {
 
 void interactive_mode(void) {
     char buffer[MAX_LINE_LEN];
-    
+	#ifdef _WIN32
+    system("cls");
+	#else
+    printf("\033[2J\033[H");
+    fflush(stdout);
+	#endif
     printf("BASIC v1.0 Ready\n");
     
     interactive_mode_active = 1;
