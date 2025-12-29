@@ -6,10 +6,13 @@ Written for fun and learning purposes, by Gemini AI with guidance (and a few twe
 Tested with programs from the [BASIC Computer Games](http://www.vintage-basic.net/games.html) book. All BCG files are in the examples/bcg directory.
 
 ## Build
-1. Download source 
-2. make sure you have ```gcc``` and ```make``` installed
-3. run ```make```
-binary will be built in the bin directory
+### Requires
+- gcc
+- make
+  
+Binary will be built in the bin directory.
+
+Note: Compile tested on MacOS and Ubuntu 24.
 
 ## Usage
 You can either run it on its own (to enter interactive mode), or pass a file to it to start running.
