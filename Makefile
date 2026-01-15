@@ -36,6 +36,7 @@ $(TARGET): $(OBJS)
 	@mkdir -p ./bin
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) -lm
 	strip $(TARGET)
+	@./tools/set_icon.sh $(TARGET) || echo "Warning: Failed to set icon"
 	rm -f $(OBJS)
 
 .c.o:

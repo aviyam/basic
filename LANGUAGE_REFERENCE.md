@@ -157,17 +157,193 @@ Used to store and retrieve static data within the program.
 
 ## String Functions
 
+### Basic String Functions
 | Function | Description | Example |
 | -------- | ----------- | ------- |
-| `LEN(S$)` | Length of string | `PRINT LEN("ABC")` |
-| `ASC(S$)` | ASCII code of first char | `PRINT ASC("A")` |
-| `CHR$(N)` | Character from ASCII code | `PRINT CHR$(65)` |
-| `MID$(S$, start [,len])` | Substring | `PRINT MID$("HELLO", 2, 2)` |
-| `LEFT$(S$, N)` | First N characters | `PRINT LEFT$("HELLO", 2)` |
-| `RIGHT$(S$, N)` | Last N characters | `PRINT RIGHT$("HELLO", 2)` |
-| `VAL(S$)` | Converts string to number | `N = VAL("123")` |
-| `STR$(N)` | Converts number to string | `S$ = STR$(123)` |
+| `LEN(S$)` | Length of string | `PRINT LEN("ABC")` returns 3 |
+| `ASC(S$)` | ASCII code of first char | `PRINT ASC("A")` returns 65 |
+| `CHR$(N)` | Character from ASCII code | `PRINT CHR$(65)` returns "A" |
+| `VAL(S$)` | Converts string to number | `N = VAL("123")` returns 123 |
+| `STR$(N)` | Converts number to string | `S$ = STR$(123)` returns "123" |
 | `INKEY$` | Reads a single keypress | `K$ = INKEY$` |
+
+### String Manipulation Functions
+
+#### LEFT$(string, length)
+Extracts characters from the left (beginning) of a string.
+- **Syntax**: `LEFT$(source_string$, number_of_characters)`
+- **Returns**: A new string containing the first N characters
+- **Parameters**:
+  - `source_string$`: The string to extract from
+  - `number_of_characters`: How many characters to extract (must be >= 0)
+- **Examples**:
+```basic
+10 LET S$ = "PROGRAMMING"
+20 PRINT LEFT$(S$, 4)     ' Prints "PROG"
+30 PRINT LEFT$(S$, 0)     ' Prints ""
+40 PRINT LEFT$(S$, 20)    ' Prints "PROGRAMMING" (full string)
+```
+- **Notes**: 
+  - If length is 0, returns empty string
+  - If length exceeds string length, returns entire string
+  - If length is negative, returns empty string
+
+#### RIGHT$(string, length)
+Extracts characters from the right (end) of a string.
+- **Syntax**: `RIGHT$(source_string$, number_of_characters)`
+- **Returns**: A new string containing the last N characters
+- **Parameters**:
+  - `source_string$`: The string to extract from
+  - `number_of_characters`: How many characters to extract (must be >= 0)
+- **Examples**:
+```basic
+10 LET S$ = "PROGRAMMING"
+20 PRINT RIGHT$(S$, 4)    ' Prints "MING"
+30 PRINT RIGHT$(S$, 0)    ' Prints ""
+40 PRINT RIGHT$(S$, 20)   ' Prints "PROGRAMMING" (full string)
+```
+- **Notes**: 
+  - If length is 0, returns empty string
+  - If length exceeds string length, returns entire string
+  - If length is negative, returns empty string
+
+#### MID$(string, start [, length])
+Extracts characters from any position within a string.
+- **Syntax**: 
+  - `MID$(source_string$, start_position)`
+  - `MID$(source_string$, start_position, length)`
+- **Returns**: A new string containing the specified substring
+- **Parameters**:
+  - `source_string$`: The string to extract from
+  - `start_position`: Starting position (1-based indexing, first char is position 1)
+  - `length`: (Optional) Number of characters to extract
+- **Examples**:
+```basic
+10 LET S$ = "PROGRAMMING"
+20 PRINT MID$(S$, 3, 4)   ' Prints "OGRA"
+30 PRINT MID$(S$, 5)      ' Prints "RAMMING" (from pos 5 to end)
+40 PRINT MID$(S$, 1, 1)   ' Prints "P"
+50 PRINT MID$(S$, 15)     ' Prints "" (start beyond string)
+```
+- **Notes**: 
+  - Uses 1-based indexing (first character is at position 1)
+  - If start position is beyond string length, returns empty string
+  - If length is omitted, extracts from start position to end of string
+  - If length is 0, returns empty string
+  - If start + length exceeds string length, extracts only available characters
+
+### String Manipulation Examples
+
+#### Name Parsing
+```basic
+10 LET FULLNAME$ = "John Michael Smith"
+20 REM Find first space
+30 FOR I = 1 TO LEN(FULLNAME$)
+40     IF MID$(FULLNAME$, I, 1) = " " THEN LET SPACE = I: GOTO 60
+50 NEXT I
+60 LET FIRST$ = LEFT$(FULLNAME$, SPACE - 1)
+70 LET LAST$ = RIGHT$(FULLNAME$, LEN(FULLNAME$) - SPACE)
+80 PRINT "First: "; FIRST$; " Last: "; LAST$
+```
+
+#### File Extension Processing
+```basic
+10 LET FILENAME$ = "document.txt"
+20 REM Find last dot
+30 FOR I = LEN(FILENAME$) TO 1 STEP -1
+40     IF MID$(FILENAME$, I, 1) = "." THEN LET DOT = I: GOTO 60
+50 NEXT I
+60 LET BASENAME$ = LEFT$(FILENAME$, DOT - 1)
+70 LET EXTENSION$ = RIGHT$(FILENAME$, LEN(FILENAME$) - DOT)
+80 PRINT "Base: "; BASENAME$; " Ext: "; EXTENSION$
+```
+
+#### Phone Number Formatting
+```basic
+10 LET PHONE$ = "5551234567"
+20 LET AREA$ = LEFT$(PHONE$, 3)
+30 LET EXCHANGE$ = MID$(PHONE$, 4, 3)
+40 LET NUMBER$ = RIGHT$(PHONE$, 4)
+50 LET FORMATTED$ = "(" + AREA$ + ") " + EXCHANGE$ + "-" + NUMBER$
+60 PRINT FORMATTED$  ' Prints "(555) 123-4567"
+```
+
+#### String Reversal
+```basic
+10 LET ORIGINAL$ = "HELLO"
+20 LET REVERSED$ = ""
+30 FOR I = LEN(ORIGINAL$) TO 1 STEP -1
+40     LET REVERSED$ = REVERSED$ + MID$(ORIGINAL$, I, 1)
+50 NEXT I
+60 PRINT REVERSED$  ' Prints "OLLEH"
+```
+
+### String Manipulation Best Practices
+
+#### Common Patterns
+
+**Finding Character Positions**
+```basic
+10 LET TEXT$ = "HELLO WORLD"
+20 LET CHAR$ = " "
+30 FOR I = 1 TO LEN(TEXT$)
+40     IF MID$(TEXT$, I, 1) = CHAR$ THEN PRINT "Found at position "; I
+50 NEXT I
+```
+
+**Validating String Format**
+```basic
+10 LET EMAIL$ = "user@domain.com"
+20 LET VALID = 0
+30 FOR I = 2 TO LEN(EMAIL$) - 1
+40     IF MID$(EMAIL$, I, 1) = "@" THEN LET VALID = 1: GOTO 60
+50 NEXT I
+60 IF VALID THEN PRINT "Valid email format" ELSE PRINT "Invalid format"
+```
+
+**Text Padding and Alignment**
+```basic
+10 LET TEXT$ = "BASIC"
+20 LET WIDTH = 10
+30 LET SPACES$ = "          "  ' 10 spaces
+40 LET PADDED$ = SPACES$ + TEXT$
+50 LET RIGHT_ALIGNED$ = RIGHT$(PADDED$, WIDTH)
+60 PRINT "'"; RIGHT_ALIGNED$; "'"
+```
+
+**String Truncation with Ellipsis**
+```basic
+10 LET LONGTEXT$ = "This is a very long string"
+20 LET MAXLEN = 15
+30 IF LEN(LONGTEXT$) > MAXLEN THEN GOSUB 100
+40 PRINT TRUNCATED$
+50 END
+100 LET TRUNCATED$ = LEFT$(LONGTEXT$, MAXLEN - 3) + "..."
+110 RETURN
+```
+
+#### Tips and Guidelines
+
+1. **Always validate string lengths** before using manipulation functions
+2. **Remember 1-based indexing** - first character is at position 1
+3. **Use `LEN()` function** to get string length for bounds checking
+4. **Handle edge cases** like empty strings and out-of-bounds positions
+5. **Combine functions** for complex operations (e.g., `LEFT$` + `MID$` + `RIGHT$`)
+6. **Use meaningful variable names** for clarity (e.g., `FIRSTNAME$` vs `F$`)
+
+#### Error Prevention
+
+- Check for empty strings before processing
+- Validate position parameters are within valid range (1 to LEN(string))
+- Test with edge cases like single-character strings
+- Use conditional logic to handle optional string parts
+
+#### Performance Considerations
+
+- Minimize string concatenation in loops
+- Store frequently used string lengths in variables
+- Break complex operations into smaller, readable steps
+- Use appropriate string sizes to avoid unnecessary memory usage
 
 ## Operators
 - **Math**: `+`, `-`, `*`, `/`, `%` (Modulus)

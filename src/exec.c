@@ -710,8 +710,11 @@ void cmd_end(void) {
 }
 
 void cmd_rem(void) {
-    /* Skip everything */
-    while (current_token != TOK_EOL && current_token != TOK_EOF) next_token();
+    /* Skip to end of line without tokenizing */
+    while (*token_ptr && *token_ptr != '\n' && *token_ptr != '\r') {
+        token_ptr++;
+    }
+    current_token = TOK_EOL;
 }
 
 void cmd_data(void) {
