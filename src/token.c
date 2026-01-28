@@ -63,6 +63,8 @@ static Keyword keywords[] = {
     {"OR", TOK_OR},
     {"NOT", TOK_NOT},
     {"ON", TOK_ON},
+    {"FILES", TOK_FILES},
+    {"CHDIR", TOK_CHDIR},
     {NULL, TOK_NONE}
 };
 

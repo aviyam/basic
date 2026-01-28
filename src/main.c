@@ -31,6 +31,10 @@ TokenType current_token = TOK_NONE;
 double token_number = 0.0;
 char token_string[MAX_LINE_LEN];
 
+/* History for interactive mode */
+static char *history[HISTORY_SIZE];
+static int history_count = 0;
+static int history_idx = 0; // Current position in history when navigating
 void error(const char *msg) {
     if (current_line_idx >= 0 && current_line_idx < program_line_count) {
         fprintf(stderr, "Error in line %d: %s\n", program[current_line_idx].number, msg);
@@ -43,6 +47,135 @@ void error(const char *msg) {
         longjmp(error_jmp, 1);
     }
     exit(1);
+}
+
+// Adds a command to history, managing the buffer as a circular queue
+void add_to_history(const char *command) {
+    if (strlen(command) == 0) return; // Don't add empty commands
+
+    // Don't add duplicate consecutive commands
+    if (history_count > 0 && strcmp(history[(history_count - 1 + HISTORY_SIZE) % HISTORY_SIZE], command) == 0) {
+        return;
+    }
+
+    int idx_to_add = history_count % HISTORY_SIZE;
+    if (history[idx_to_add] != NULL) {
+        free(history[idx_to_add]);
+    }
+    history[idx_to_add] = strdup(command);
+    if (history_count < HISTORY_SIZE) {
+        history_count++;
+    }
+    history_idx = history_count; // Reset history index to end after adding
+}
+
+// Custom line reader with history and basic editing
+char *read_line_with_history(const char *prompt) {
+    static char line_buffer[MAX_LINE_LEN];
+    int buffer_len = 0;
+    int cursor_pos = 0; // New: Tracks cursor position within the buffer
+    int key; // Declared here, used in loop.
+
+    line_buffer[0] = '\0';
+    history_idx = history_count; // Start at the end of history for new input
+
+    setup_terminal(); // Ensure terminal is in raw mode
+
+    printf("%s", prompt);
+    fflush(stdout);
+
+    while (1) {
+        key = read_key();
+
+        if (key == KEY_NORMAL) {
+            // No key pressed, continue
+            continue;
+        } else if (key >= 32 && key <= 126) { // Printable ASCII character
+            if (buffer_len < MAX_LINE_LEN - 1) { // Check for buffer overflow
+                if (cursor_pos < buffer_len) {
+                    // Insert character in the middle of the line
+                    memmove(line_buffer + cursor_pos + 1, line_buffer + cursor_pos, buffer_len - cursor_pos);
+                    line_buffer[cursor_pos] = (char)key;
+                    buffer_len++;
+                    line_buffer[buffer_len] = '\0';
+                    print_line_buffer(prompt, line_buffer, cursor_pos + 1); // Redraw and position cursor
+                    cursor_pos++;
+                } else {
+                    // Append character to the end of the line
+                    line_buffer[buffer_len++] = (char)key;
+                    line_buffer[buffer_len] = '\0';
+                    printf("%c", (char)key); // Echo character
+                    cursor_pos++;
+                    fflush(stdout);
+                }
+            }
+        } else if (key == KEY_BACKSPACE) {
+            if (buffer_len > 0) {
+                if (cursor_pos < buffer_len) {
+                    // Delete character before cursor and shift
+                    memmove(line_buffer + cursor_pos - 1, line_buffer + cursor_pos, buffer_len - cursor_pos);
+                    buffer_len--;
+                    line_buffer[buffer_len] = '\0';
+                    cursor_pos--;
+                    print_line_buffer(prompt, line_buffer, cursor_pos); // Redraw and position cursor
+                } else {
+                    // Delete last character
+                    buffer_len--;
+                    line_buffer[buffer_len] = '\0';
+                    printf("\b \b"); // Erase character
+                    cursor_pos--;
+                    fflush(stdout);
+                }
+            }
+        } else if (key == KEY_ENTER) {
+            printf("\n"); // Newline for the entered command
+            break;
+        } else if (key == KEY_UP) {
+            if (history_count > 0 && history_idx > 0) {
+                history_idx--;
+                strcpy(line_buffer, history[history_idx % HISTORY_SIZE]);
+                buffer_len = strlen(line_buffer);
+                cursor_pos = buffer_len; // Cursor at end of history command
+                print_line_buffer(prompt, line_buffer, cursor_pos);
+            }
+        } else if (key == KEY_DOWN) {
+            if (history_count > 0 && history_idx < history_count) {
+                history_idx++;
+                if (history_idx == history_count) { // Past the last history item, show empty line
+                    line_buffer[0] = '\0';
+                    buffer_len = 0;
+                    cursor_pos = 0;
+                } else {
+                    strcpy(line_buffer, history[history_idx % HISTORY_SIZE]);
+                    buffer_len = strlen(line_buffer);
+                }
+                cursor_pos = buffer_len; // Cursor at end of history command
+                print_line_buffer(prompt, line_buffer, cursor_pos);
+            }
+        } else if (key == KEY_LEFT) { // New: Left arrow
+            if (cursor_pos > 0) {
+                cursor_pos--;
+                printf("\033[D"); // Move terminal cursor left
+                fflush(stdout);
+            }
+        } else if (key == KEY_RIGHT) { // New: Right arrow
+            if (cursor_pos < buffer_len) {
+                cursor_pos++;
+                printf("\033[C"); // Move terminal cursor right
+                fflush(stdout);
+            }
+        } else if (key == KEY_EOF) { // Ctrl+D or Del
+            if (buffer_len == 0) {
+                printf("\n");
+                restore_terminal();
+                return NULL; // Indicate EOF
+            }
+        }
+        // Ignore other special keys for now (e.g., KEY_LEFT, KEY_RIGHT)
+    }
+
+    restore_terminal(); // Restore terminal to normal mode after line input
+    return line_buffer;
 }
 
 void process_line(char *buffer) {
@@ -101,12 +234,7 @@ void process_line(char *buffer) {
         }
     } else {
         /* Immediate mode execution */
-        /* Strip trailing newline */
-        p = buffer + strlen(buffer) - 1;
-        while (p >= buffer && (*p == '\r' || *p == '\n')) {
-            *p = '\0';
-            p--;
-        }
+        // The read_line_with_history function already ensures no trailing newline
         
         current_line_idx = -1; /* Special value for immediate mode? */
         init_tokenizer(buffer);

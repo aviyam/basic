@@ -1,25 +1,26 @@
 #include "bas.h"
 
 #ifndef _WIN32
-#include <termios.h>
 #include <fcntl.h>
+#include <dirent.h> // For directory listing
+#include <unistd.h> // For chdir
 struct termios orig_termios;
-int term_setup = 0;
 #else
 #include <conio.h>
 #endif
 
+int term_setup = 0; // Global definition, only one needed.
 int current_column = 0;
 
 /* Terminal handling for INKEY$ on POSIX */
 void setup_terminal(void) {
 #ifndef _WIN32
     struct termios new_termios;
-    if (term_setup) return;
+    if (term_setup) return; // Already set up
     tcgetattr(STDIN_FILENO, &orig_termios);
     new_termios = orig_termios;
-    new_termios.c_lflag &= ~(ICANON | ECHO);
-    new_termios.c_cc[VMIN] = 0;
+    new_termios.c_lflag &= ~(ICANON | ECHO); // Disable canonical mode and echoing
+    new_termios.c_cc[VMIN] = 1; // Read blocks until at least 1 character is received
     new_termios.c_cc[VTIME] = 0;
     tcsetattr(STDIN_FILENO, TCSANOW, &new_termios);
     term_setup = 1;
@@ -35,26 +36,65 @@ void restore_terminal(void) {
 #endif
 }
 
-char *get_inkey(void) {
-    char *s = malloc(2);
-    s[0] = '\0';
-    s[1] = '\0';
-
+// New function to read a key, handling special sequences
+int read_key(void) {
 #ifdef _WIN32
     if (_kbhit()) {
-        s[0] = _getch();
+        int c = _getch();
+        if (c == 0 || c == 0xE0) { // Special key
+            c = _getch(); // Read extended key code
+            switch (c) {
+                case 72: return KEY_UP;
+                case 80: return KEY_DOWN;
+                case 75: return KEY_LEFT;
+                case 77: return KEY_RIGHT;
+                case 83: return KEY_EOF; // Del key, map to EOF for simplicity
+                default: return KEY_NORMAL; // Unknown special key
+            }
+        }
+        if (c == '\r') return KEY_ENTER; // Enter key
+        if (c == '\b') return KEY_BACKSPACE; // Backspace
+        return c; // Normal character
     }
+    return KEY_NORMAL; // No key pressed
 #else
     {
         char c;
         setup_terminal(); /* Ensure terminal is in raw mode */
         if (read(STDIN_FILENO, &c, 1) == 1) {
-            s[0] = c;
+            if (c == '\x1b') { // Escape sequence
+                char seq[3];
+                // Set non-blocking read for a short period to check for sequence
+                int old_flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+                fcntl(STDIN_FILENO, F_SETFL, old_flags | O_NONBLOCK);
+
+                if (read(STDIN_FILENO, &seq[0], 1) == 1 && read(STDIN_FILENO, &seq[1], 1) == 1) {
+                    fcntl(STDIN_FILENO, F_SETFL, old_flags); // Restore blocking
+                    if (seq[0] == '[') {
+                        switch (seq[1]) {
+                            case 'A': return KEY_UP;
+                            case 'B': return KEY_DOWN;
+                            case 'C': return KEY_RIGHT;
+                            case 'D': return KEY_LEFT;
+                            case '3': // Delete key sequence: ESC [ 3 ~
+                                if (read(STDIN_FILENO, &seq[2], 1) == 1 && seq[2] == '~') {
+                                    return KEY_EOF; // Map Del to EOF
+                                }
+                                break;
+                        }
+                    }
+                }
+                fcntl(STDIN_FILENO, F_SETFL, old_flags); // Ensure blocking is restored
+                return KEY_NORMAL; // Unknown escape sequence or just ESC
+            }
+            if (c == '\n' || c == '\r') return KEY_ENTER;
+            if (c == 127) return KEY_BACKSPACE; // ASCII for DEL (backspace)
+            if (c == 4) return KEY_EOF; // Ctrl+D
+            return c; // Normal character
         }
-        restore_terminal();
+        return KEY_NORMAL; // No key pressed
     }
 #endif
-    return s;
 }
 
 int find_line_index(int line_num) {
@@ -234,6 +274,63 @@ void cmd_cls(void) {
 #endif
     current_column = 0;
 }
+
+void cmd_files(void) {
+    next_token();
+    char path[MAX_LINE_LEN];
+    if (current_token == TOK_STRING) {
+        strcpy(path, token_string);
+        next_token();
+    } else {
+        strcpy(path, "."); // Default to current directory
+    }
+
+#ifdef _WIN32
+    WIN32_FIND_DATA findFileData;
+    HANDLE hFind = FindFirstFile(strcat(path, "\\*"), &findFileData);
+    if (hFind == INVALID_HANDLE_VALUE) {
+        fprintf(stderr, "Error: Could not open directory %s\n", path);
+        return;
+    }
+    do {
+        printf("%s\n", findFileData.cFileName);
+    } while (FindNextFile(hFind, &findFileData) != 0);
+    FindClose(hFind);
+#else
+    DIR *d;
+    struct dirent *dir;
+    d = opendir(path);
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            printf("%s\n", dir->d_name);
+        }
+        closedir(d);
+    } else {
+        fprintf(stderr, "Error: Could not open directory %s\n", path);
+    }
+#endif
+}
+
+void cmd_chdir(void) {
+    next_token();
+    if (current_token != TOK_STRING) {
+        error("Expected directory path string for CHDIR");
+    }
+    char path[MAX_LINE_LEN];
+    strcpy(path, token_string);
+    next_token();
+
+#ifdef _WIN32
+    if (!SetCurrentDirectory(path)) {
+        fprintf(stderr, "Error: Could not change directory to %s\n", path);
+    }
+#else
+    if (chdir(path) != 0) {
+        fprintf(stderr, "Error: Could not change directory to %s\n", path);
+    }
+#endif
+}
+
 
 void cmd_print(void) {
     int newline = 1;
@@ -600,6 +697,23 @@ void cmd_sleep(void) {
 #endif
 }
 
+// Helper for clearing the current line on the terminal
+void clear_current_line(int prompt_len, int current_len) {
+    printf("\r\033[K"); // Move cursor to beginning of line and erase to end
+    fflush(stdout);
+}
+
+// Helper for printing the prompt and buffer, then positioning the cursor
+void print_line_buffer(const char *prompt, const char *buffer, int cursor_pos) {
+    printf("\r\033[K%s%s", prompt, buffer); // Clear, print prompt and buffer
+    // Move cursor back to the correct position
+    // Calculate how many characters to move left from the end of the line
+    int chars_to_move_left = strlen(buffer) - cursor_pos;
+    if (chars_to_move_left > 0) {
+        printf("\033[%dD", chars_to_move_left);
+    }
+    fflush(stdout);
+}
 void cmd_for(void) {
     char var_name[MAX_VAR_NAME];
     double start_val, end_val, step_val = 1.0;
@@ -1020,6 +1134,8 @@ void exec_statement(void) {
     else if (current_token == TOK_EDIT) cmd_edit();
     else if (current_token == TOK_BYE) cmd_bye();
     else if (current_token == TOK_CLS) cmd_cls();
+    else if (current_token == TOK_FILES) cmd_files();
+    else if (current_token == TOK_CHDIR) cmd_chdir();
     else if (current_token == TOK_REM) cmd_rem();
     else if (current_token == TOK_DATA) cmd_data();
     else if (current_token == TOK_READ) cmd_read();
@@ -1083,5 +1199,3 @@ void exec_statement(void) {
         }
     }
 }
-
-

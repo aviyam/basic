@@ -24,3 +24,5 @@ For a complete list of commands, functions, and features, please see the [Langua
 - File operations (`SAVE`, `LOAD`, `EDIT`, CLI argument) automatically append `.bas` if no extension is provided.
 - Arrays must be declared with `DIM`. Indices are 0-based.
 - Shebang support allows running scripts directly (e.g. `#!/usr/local/bin/basic`).
+- `FILES` lists the contents of the current directory (or a specified path).
+- `CHDIR` changes the current working directory.

@@ -13,6 +13,7 @@
 #else
 #include <sys/types.h>
 #include <sys/time.h>
+#include <termios.h> // For termios
 #include <unistd.h>
 #endif
 
@@ -22,6 +23,19 @@
 #define MAX_LINES 2000
 #define STACK_SIZE 100
 #define MAX_ARRAYS 50
+#define HISTORY_SIZE 20 // Max number of commands to store in history
+
+// Special key codes for line editing
+typedef enum {
+    KEY_NORMAL = 0,
+    KEY_UP,
+    KEY_DOWN,
+    KEY_LEFT,
+    KEY_RIGHT,
+    KEY_BACKSPACE,
+    KEY_ENTER,
+    KEY_EOF // Ctrl+D
+} SpecialKey;
 
 /* Token Types */
 typedef enum {
@@ -34,7 +48,7 @@ typedef enum {
     TOK_TAB, TOK_SPC, TOK_INKEY, TOK_LEN,
     TOK_ASC, TOK_CHR, TOK_MID, TOK_LEFT, TOK_RIGHT, TOK_VAL, TOK_STR,
     TOK_PLUS, TOK_MINUS, TOK_MUL, TOK_DIV, TOK_MOD,
-    TOK_EQ, TOK_NE, TOK_LT, TOK_GT, TOK_LE, TOK_GE,
+    TOK_EQ, TOK_NE, TOK_LT, TOK_GT, TOK_LE, TOK_GE, TOK_FILES, TOK_CHDIR,
     TOK_AND, TOK_OR, TOK_NOT,
     TOK_LPAREN, TOK_RPAREN, TOK_COMMA, TOK_SEMICOLON, TOK_COLON,
     TOK_SAVE, TOK_LOAD, TOK_EDIT,
@@ -151,6 +165,8 @@ void cmd_input(void);
 void cmd_sleep(void);
 void cmd_gosub(void);
 void cmd_return(void);
+void cmd_files(void);
+void cmd_chdir(void);
 void cmd_end(void);
 
 /* Variables */
@@ -166,9 +182,12 @@ void error(const char *msg);
 int find_line_index(int line_num);
 
 /* Platform IO */
-char *get_inkey(void);
+// char *get_inkey(void); // This will be replaced/modified
+int read_key(void); // New function for reading keys
 void setup_terminal(void);
-void restore_terminal(void);
+void restore_terminal(void); // This will be replaced/modified
+void clear_current_line(int prompt_len, int current_len);
+void print_line_buffer(const char *prompt, const char *buffer, int cursor_pos);
 
 /* Utils */
 void ensure_extension(char *filename);

@@ -275,8 +275,11 @@ Value factor(void) {
         val = factor(); /* Unary plus, do nothing */
     } else if (current_token == TOK_INKEY) {
         next_token(); /* Consume INKEY$ */
+        int key_code = read_key();
         val.type = VAL_STR;
-        val.str = get_inkey();
+        val.str = malloc(2); // For a single character + null terminator
+        val.str[0] = (char)key_code;
+        val.str[1] = '\0';
     } else if (current_token == TOK_LEN) {
         next_token();
         if (!match(TOK_LPAREN)) error("Expected '(' for LEN");

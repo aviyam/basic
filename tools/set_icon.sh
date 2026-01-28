@@ -1,14 +1,22 @@
 #!/bin/bash
 set -e
 
-APP_ICON="assets/icon.png"
+# --- Configuration ---
+readonly APP_ICON="assets/icon.png"
+readonly DEFAULT_TARGET="bin/basic"
+
+# --- Script ---
 TARGET_FILE=""
+
+# Create a temporary directory and set a trap to clean it up on exit.
+readonly TMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TMP_DIR"' EXIT
 
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 <target_file>"
     # If no argument, try to default to bin/basic if it exists
-    if [ -f "bin/basic" ]; then
-        TARGET_FILE="bin/basic"
+    if [ -f "$DEFAULT_TARGET" ]; then
+        TARGET_FILE="$DEFAULT_TARGET"
         echo "No target specified, defaulting to $TARGET_FILE"
     else
         exit 1
@@ -28,7 +36,7 @@ if [ ! -f "$TARGET_FILE" ]; then
 fi
 
 echo "Creating iconset..."
-ICONSET_DIR="basic.iconset"
+readonly ICONSET_DIR="$TMP_DIR/basic.iconset"
 mkdir -p "$ICONSET_DIR"
 
 # Resize images
@@ -44,11 +52,12 @@ sips -s format png -z 512 512   "$APP_ICON" --out "$ICONSET_DIR/icon_512x512.png
 sips -s format png -z 1024 1024 "$APP_ICON" --out "$ICONSET_DIR/icon_512x512@2x.png" > /dev/null
 
 echo "Converting to icns..."
-iconutil -c icns "$ICONSET_DIR" -o Icon.icns
+readonly ICNS_FILE="$TMP_DIR/Icon.icns"
+iconutil -c icns "$ICONSET_DIR" -o "$ICNS_FILE"
 
 echo "Setting icon for $TARGET_FILE..."
 # Use Swift to set the icon (standard macOS way for files)
-swift - "$TARGET_FILE" "Icon.icns" <<EOF
+swift - "$TARGET_FILE" "$ICNS_FILE" <<EOF
 import Cocoa
 
 let args = CommandLine.arguments
@@ -78,7 +87,3 @@ if [ $? -eq 0 ]; then
 else
     echo "Failed to set icon."
 fi
-
-# Cleanup
-rm -rf "$ICONSET_DIR"
-rm -f Icon.icns

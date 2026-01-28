@@ -14,6 +14,20 @@ This guide provides an overview of the commands and functions supported by the B
 | `LOAD "filename"` | Loads a program from disk. |
 | `EDIT` | Opens the current program in the system's external editor (e.g., nano, notepad). |
 | `CLS` | Clears the terminal screen. |
+| `FILES ["path"]` | Lists files and directories in the specified path. If no path is given, lists the current directory. |
+| `CHDIR "path"` | Changes the current working directory to the specified path. |
+
+**Examples for File Navigation:**
+```basic
+10 FILES                  ' List files in current directory
+20 FILES "examples/bcg"  ' List files in a specific directory
+30 CHDIR "examples"      ' Change to the 'examples' directory
+40 FILES                 ' Now lists files in 'examples'
+50 CHDIR ".."            ' Go up one directory
+60 PRINT "Current directory changed."
+```
+
+
 
 ## Input / Output
 
