@@ -23,6 +23,24 @@ else
     CFLAGS += -Wall -pedantic -std=c99 -D_POSIX_C_SOURCE=200809L
 endif
 
+# Get the current Git tag (if any)
+GIT_TAG := $(shell git describe --tags --abbrev=0 2>/dev/null)
+# Get the short commit hash (5 characters)
+GIT_HASH := $(shell git rev-parse --short=5 HEAD 2>/dev/null)
+
+# Construct the version string based on whether a tag exists.
+# If a tag exists, append the short commit hash.
+# If no tag exists, default to "UNKNOWN_VERSION".
+ifeq ($(GIT_TAG),)
+    # No tag found, use the default "UNKNOWN_VERSION"
+    VERSION := UNKNOWN_VERSION
+else
+    # Tag found, append the short commit hash if available
+    VERSION := $(GIT_TAG)$(if $(GIT_HASH),.$(GIT_HASH))
+endif
+
+CFLAGS += -DBASIC_VERSION="\"$(VERSION)\""
+
 TARGET = ./bin/basic
 SRCS = ./src/main.c ./src/token.c ./src/eval.c ./src/exec.c ./src/var.c
 

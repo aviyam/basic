@@ -297,8 +297,8 @@ void interactive_mode(void) {
 	#else
     printf("\033[2J\033[H");
     fflush(stdout);
-	#endif
-    printf("BASIC v1.0 Ready\n");
+	#endif // _WIN32
+    printf("BASIC %s Ready\n", BASIC_VERSION);
     
     interactive_mode_active = 1;
     
