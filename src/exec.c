@@ -513,7 +513,7 @@ void cmd_input(void) {
     
     /* Save main lexer state globals */
     char *main_token_ptr;
-    TokenType main_token;
+    BasTokenType main_token;
     double main_token_number;
     char main_token_string[MAX_LINE_LEN];
 

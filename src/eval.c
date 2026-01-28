@@ -72,7 +72,7 @@ Value relation(void) {
     while (current_token == TOK_EQ || current_token == TOK_NE ||
            current_token == TOK_LT || current_token == TOK_GT ||
            current_token == TOK_LE || current_token == TOK_GE) {
-        TokenType op = current_token;
+        BasTokenType op = current_token;
         Value right;
         next_token();
         right = additive();
@@ -116,7 +116,7 @@ Value relation(void) {
 Value additive(void) {
     Value left = term();
     while (current_token == TOK_PLUS || current_token == TOK_MINUS) {
-        TokenType op = current_token;
+        BasTokenType op = current_token;
         Value right;
         next_token();
         right = term();
@@ -149,7 +149,7 @@ Value additive(void) {
 Value term(void) {
     Value left = factor();
     while (current_token == TOK_MUL || current_token == TOK_DIV || current_token == TOK_MOD) {
-        TokenType op = current_token;
+        BasTokenType op = current_token;
         Value right;
         next_token();
         right = factor();
@@ -209,7 +209,7 @@ Value factor(void) {
                  
                  /* Save Parser State */
                  char *save_token_ptr = token_ptr;
-                 TokenType save_token = current_token;
+                 BasTokenType save_token = current_token;
                  double save_num = token_number;
                  char save_str[MAX_LINE_LEN];
                  strcpy(save_str, token_string);
@@ -399,7 +399,7 @@ Value factor(void) {
         val.str[len] = '\0';
         free(v.str);
     } else if (current_token >= TOK_SIN && current_token <= TOK_RND) {
-        TokenType func = current_token;
+        BasTokenType func = current_token;
         next_token();
         if (!match(TOK_LPAREN)) error("Expected '(' for function");
         val = expression();

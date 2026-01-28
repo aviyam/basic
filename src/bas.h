@@ -54,7 +54,7 @@ typedef enum {
     TOK_SAVE, TOK_LOAD, TOK_EDIT,
     TOK_DATA, TOK_READ, TOK_RESTORE,
     TOK_STOP, TOK_DEF, TOK_ON
-} TokenType;
+} BasTokenType;
 
 /* Value Type */
 typedef enum {
@@ -136,7 +136,7 @@ extern char *data_ptr;
 
 /* Lexer State */
 extern char *token_ptr;
-extern TokenType current_token;
+extern BasTokenType current_token;
 extern double token_number;
 extern char token_string[MAX_LINE_LEN];
 
@@ -148,7 +148,7 @@ void run_program(void);
 /* Tokenizer */
 void next_token(void);
 void init_tokenizer(char *line);
-int match(TokenType t);
+int match(BasTokenType t);
 
 /* Expression Evaluator */
 Value expression(void);

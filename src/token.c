@@ -2,7 +2,7 @@
 
 typedef struct {
     char *name;
-    TokenType type;
+    BasTokenType type;
 } Keyword;
 
 static Keyword keywords[] = {
@@ -162,7 +162,7 @@ void next_token(void) {
     }
 }
 
-int match(TokenType t) {
+int match(BasTokenType t) {
     if (current_token == t) {
         next_token();
         return 1;

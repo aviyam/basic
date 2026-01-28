@@ -27,7 +27,7 @@ int interactive_mode_active = 0;
 
 /* Lexer definitions */
 char *token_ptr = NULL;
-TokenType current_token = TOK_NONE;
+BasTokenType current_token = TOK_NONE;
 double token_number = 0.0;
 char token_string[MAX_LINE_LEN];
 
