@@ -9,18 +9,16 @@ CC = cc
 CFLAGS = -Os
 LDFLAGS = 
 
-# Check for Windows (MinGW/Cygwin)
-ifeq ($(UNAME_S),CYGWIN_NT)
-    CC = gcc
-    CFLAGS += -Wall -pedantic -std=c99 -D_POSIX_C_SOURCE=200809L -D_WIN32
-    LDFLAGS += -lws2_32 # Link with Winsock for select()
-else ifeq ($(UNAME_S),MINGW32_NT)
+# Check for Windows (MinGW/Cygwin/MSYS)
+ifneq (,$(findstring CYGWIN,$(UNAME_S))$(findstring MINGW,$(UNAME_S))$(findstring MSYS,$(UNAME_S)))
     CC = gcc
     CFLAGS += -Wall -pedantic -std=c99 -D_POSIX_C_SOURCE=200809L -D_WIN32
     LDFLAGS += -lws2_32
+    EXTENSION = .exe
 else
     # MacOS / Linux (POSIX)
     CFLAGS += -Wall -pedantic -std=c99 -D_POSIX_C_SOURCE=200809L
+    EXTENSION =
 endif
 
 # Get the current Git tag (if any)
@@ -41,7 +39,7 @@ endif
 
 CFLAGS += -DBASIC_VERSION="\"$(VERSION)\""
 
-TARGET = ./bin/basic
+TARGET = ./bin/basic$(EXTENSION)
 SRCS = ./src/main.c ./src/token.c ./src/eval.c ./src/exec.c ./src/var.c
 
 OBJS = $(SRCS:.c=.o)

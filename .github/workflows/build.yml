@@ -1,0 +1,59 @@
+name: Build BASIC Interpreter
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: linux-x86_64
+            runner: ubuntu-latest
+            artifact_name: basic-linux-x86_64
+          - os: macos-x86_64
+            runner: macos-13
+            artifact_name: basic-macos-x86_64
+          - os: macos-arm64
+            runner: macos-14
+            artifact_name: basic-macos-arm64
+          - os: windows-x86_64
+            runner: windows-latest
+            artifact_name: basic-windows-x86_64.exe
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Print System Info
+      run: |
+        echo "OS: ${{ matrix.os }}"
+        uname -a
+        gcc --version
+
+    - name: Build
+      run: make
+
+    - name: Rename Binary
+      run: |
+        if [ "${{ runner.os }}" == "Windows" ]; then
+          mv bin/basic.exe bin/${{ matrix.artifact_name }}
+        else
+          mv bin/basic bin/${{ matrix.artifact_name }}
+        fi
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: bin/${{ matrix.artifact_name }}
