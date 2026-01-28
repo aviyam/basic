@@ -58,5 +58,9 @@ $(TARGET): $(OBJS)
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Update README version to match git tag
+update-version:
+	@./tools/update_version.sh
+
 clean:
 	rm -f $(TARGET) $(OBJS)
