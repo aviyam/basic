@@ -1,4 +1,4 @@
-# BASIC Interpreter
+# BASIC Interpreter v0.8
 
 A lightweight, efficient BASIC interpreter written in C99. Optimized for compatibility with MS-DOS BASIC.
 Written for fun and learning purposes, by Gemini AI with guidance (and a few tweaks) from me.
