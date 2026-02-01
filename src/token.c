@@ -65,6 +65,10 @@ static Keyword keywords[] = {
     {"ON", TOK_ON},
     {"FILES", TOK_FILES},
     {"CHDIR", TOK_CHDIR},
+    {"VTAB", TOK_VTAB},
+    {"HTAB", TOK_HTAB},
+    {"INVERSE", TOK_INVERSE},
+    {"NORMAL", TOK_NORMAL},
     {NULL, TOK_NONE}
 };
 
