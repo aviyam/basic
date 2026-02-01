@@ -162,6 +162,7 @@ void next_token(void) {
             if (*token_ptr == '=') { current_token = TOK_GE; token_ptr++; }
             else current_token = TOK_GT;
             break;
+        case '?': current_token = TOK_PRINT; token_ptr++; break;
         default:
             error("Unknown character");
             break;
