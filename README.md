@@ -1,9 +1,11 @@
-# BASIC Interpreter v0.8
+# BASIC Interpreter
 
-A lightweight, efficient BASIC interpreter written in C99. Optimized for compatibility with MS-DOS BASIC.
-Written for fun and learning purposes, by Gemini AI with guidance (and a few tweaks) from me.
+A lightweight, efficient BASIC interpreter written in C99. Optimized for compatibility with MS-DOS BASIC and some APPLEBASIC features.
+Written for fun and learning purposes, by Gemini AI with guidance (and a few tweaks) by me.
 
 Tested with programs from the [BASIC Computer Games](http://www.vintage-basic.net/games.html) book. All BCG files are in the examples/bcg directory.
+Also tested with some APPLEBASIC programs from https://art.hoembeka.be/apple/
+
 
 ## Build
 ### Requires

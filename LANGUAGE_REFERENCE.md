@@ -14,6 +14,7 @@ This guide provides an overview of the commands and functions supported by the B
 | `LOAD "filename"` | Loads a program from disk. |
 | `EDIT` | Opens the current program in the system's external editor (e.g., nano, notepad). |
 | `CLS` | Clears the terminal screen. |
+| `HOME` | Alias for `CLS`. Clears the terminal screen. |
 | `FILES ["path"]` | Lists files and directories in the specified path. If no path is given, lists the current directory. |
 | `CHDIR "path"` | Changes the current working directory to the specified path. |
 
@@ -34,6 +35,7 @@ This guide provides an overview of the commands and functions supported by the B
 ### PRINT
 Outputs text or numbers to the console.
 - **Syntax**: `PRINT [expression] [, or ;]`
+- **Alias**: `?` (e.g., `? "Hello"`)
 - **Example**: 
 ```basic
 10 PRINT "Hello"; " "; "World"
@@ -56,6 +58,44 @@ Pauses execution for a specified duration (in 60Hz ticks).
 ```basic
 50 SLEEP 60  ' Wait for 1 second
 ```
+
+## Terminal Control (AppleBASIC compatibility)
+
+### VTAB
+Moves the cursor to a specific vertical line (row).
+- **Syntax**: `VTAB line_number` (1-indexed)
+
+### HTAB
+Moves the cursor to a specific horizontal column.
+- **Syntax**: `HTAB column_number` (1-indexed)
+
+### INVERSE
+Sets the text display to inverse video (black on white).
+- **Syntax**: `INVERSE`
+
+### NORMAL
+Resets the text display to normal video (white on black).
+- **Syntax**: `NORMAL`
+
+### TEXT
+Resets text attributes (currently equivalent to NORMAL).
+- **Syntax**: `TEXT`
+
+## Memory Access
+
+### POKE
+Writes a byte value to a specific memory address in the virtual 64K memory.
+- **Syntax**: `POKE address, value`
+- **Parameters**:
+  - `address`: 0 to 65535
+  - `value`: 0 to 255
+- **Example**: `POKE 1024, 255`
+
+### PEEK
+Reads a byte value from a specific memory address.
+- **Syntax**: `PEEK(address)`
+- **Returns**: Integer value (0-255)
+- **Example**: `PRINT PEEK(1024)`
 
 ## Variables and Arrays
 
