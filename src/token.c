@@ -71,6 +71,8 @@ static Keyword keywords[] = {
     {"NORMAL", TOK_NORMAL},
     {"TEXT", TOK_TEXT},
     {"HOME", TOK_HOME},
+    {"PEEK", TOK_PEEK},
+    {"POKE", TOK_POKE},
     {NULL, TOK_NONE}
 };
 

@@ -1148,6 +1148,23 @@ void cmd_text(void) {
     /* In optional future, reset window/scroll region here */
 }
 
+void cmd_poke(void) {
+    next_token();
+    Value vaddr = expression();
+    if (vaddr.type != VAL_NUM) error("POKE address must be number");
+    if (!match(TOK_COMMA)) error("Expected ',' in POKE");
+    Value vval = expression();
+    if (vval.type != VAL_NUM) error("POKE value must be number");
+    
+    int addr = (int)vaddr.num;
+    int val = (int)vval.num;
+    
+    if (addr < 0 || addr > 65535) error("POKE address out of range");
+    if (val < 0 || val > 255) error("POKE value out of range (0-255)");
+    
+    virtual_memory[addr] = (unsigned char)val;
+}
+
 void exec_statement(void) {
     if (current_token == TOK_PRINT) cmd_print();
     else if (current_token == TOK_IF) cmd_if();
@@ -1184,6 +1201,7 @@ void exec_statement(void) {
     else if (current_token == TOK_NORMAL) cmd_normal();
     else if (current_token == TOK_TEXT) cmd_text();
     else if (current_token == TOK_HOME) { current_token = TOK_CLS; cmd_cls(); }
+    else if (current_token == TOK_POKE) cmd_poke();
     else if (current_token == TOK_IDENTIFIER) {
         char var_name[MAX_VAR_NAME];
         strcpy(var_name, token_string);

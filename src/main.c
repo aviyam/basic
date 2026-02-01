@@ -20,6 +20,8 @@ int execution_finished = 0;
 int data_line_idx = 0;
 char *data_ptr = NULL;
 
+unsigned char virtual_memory[65536];
+
 char *jump_to_ptr = NULL;
 
 jmp_buf error_jmp;

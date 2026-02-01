@@ -427,6 +427,16 @@ Value factor(void) {
             case TOK_RND: val.num = ((double)rand() / ((double)RAND_MAX + 1.0)); break;
             default: break;
         }
+    } else if (current_token == TOK_PEEK) {
+        next_token();
+        if (!match(TOK_LPAREN)) error("Expected '(' for PEEK");
+        Value v = expression();
+        if (v.type != VAL_NUM) error("PEEK expects address number");
+        int addr = (int)v.num;
+        if (addr < 0 || addr > 65535) error("PEEK address out of range (0-65535)");
+        val.type = VAL_NUM;
+        val.num = (double)virtual_memory[addr];
+        if (!match(TOK_RPAREN)) error("Missing ')' for PEEK");
     } else {
         error("Expected number, variable, or function");
     }

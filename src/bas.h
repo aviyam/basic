@@ -55,7 +55,8 @@ typedef enum {
     TOK_DATA, TOK_READ, TOK_RESTORE,
     TOK_STOP, TOK_DEF, TOK_ON,
     TOK_VTAB, TOK_HTAB, TOK_INVERSE, TOK_NORMAL,
-    TOK_TEXT, TOK_HOME
+    TOK_TEXT, TOK_HOME,
+    TOK_PEEK, TOK_POKE
 } BasTokenType;
 
 /* Value Type */
@@ -141,6 +142,7 @@ extern char *token_ptr;
 extern BasTokenType current_token;
 extern double token_number;
 extern char token_string[MAX_LINE_LEN];
+extern unsigned char virtual_memory[65536];
 
 /* Prototypes */
 void load_program(const char *filename);
