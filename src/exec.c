@@ -1142,6 +1142,12 @@ void cmd_normal(void) {
     printf("\033[0m");
 }
 
+void cmd_text(void) {
+    next_token();
+    printf("\033[0m"); /* Reset attributes */
+    /* In optional future, reset window/scroll region here */
+}
+
 void exec_statement(void) {
     if (current_token == TOK_PRINT) cmd_print();
     else if (current_token == TOK_IF) cmd_if();
@@ -1176,6 +1182,8 @@ void exec_statement(void) {
     else if (current_token == TOK_HTAB) cmd_htab();
     else if (current_token == TOK_INVERSE) cmd_inverse();
     else if (current_token == TOK_NORMAL) cmd_normal();
+    else if (current_token == TOK_TEXT) cmd_text();
+    else if (current_token == TOK_HOME) { current_token = TOK_CLS; cmd_cls(); }
     else if (current_token == TOK_IDENTIFIER) {
         char var_name[MAX_VAR_NAME];
         strcpy(var_name, token_string);

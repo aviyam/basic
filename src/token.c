@@ -69,6 +69,8 @@ static Keyword keywords[] = {
     {"HTAB", TOK_HTAB},
     {"INVERSE", TOK_INVERSE},
     {"NORMAL", TOK_NORMAL},
+    {"TEXT", TOK_TEXT},
+    {"HOME", TOK_HOME},
     {NULL, TOK_NONE}
 };
 

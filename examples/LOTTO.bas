@@ -18,7 +18,8 @@
 90 IF Z = 5 THEN 5000
 100 IF Z = 6 THEN 6000
 110 IF Z > 6 THEN 500
-500 K$ = INKEY$
+500 INVERSE: PRINT "Press any key to select next set, Q to quit": NORMAL
+501 K$ = INKEY$
 505 IF K$ = "Q" THEN END
 510 GOTO 15
 1000 A = X
