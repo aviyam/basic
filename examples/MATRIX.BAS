@@ -1,5 +1,5 @@
-10 print chr$(21)249\TDJ8`R3)QR]QJE9L'].
-20 DIM C(40), S(40),T(40)=D.2B(:X<BGIJ,G
+10 print chr$(21)
+20 DIM C(40), S(40),T(40)=D
 30 FOR I= 1 TO 40 : C(I) = INT(RND(1) *24) + 1
 40 S(I) = INT(RND(1) *4)+1:T(I)=0: NEXT I
 50 CLS:Z=0:M=0
@@ -13,4 +13,5 @@
 160 IF RND(1) > .92 THEN VTAB INT(RND(1) * 24) + 1:HTAB K:PRINT " ";
 180 NEXT K
 190 Z = Z + 1:IF Z < 47 GOTO 90
+200 SLEEP(1)
 220 GOTO 90
